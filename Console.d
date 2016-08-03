@@ -103,3 +103,16 @@ void Set_Open_Console_Key(SDL_Keycode k) {
 void Set_Console_History(int history_limit) {
   ConsEng.console_history = history_limit;
 }
+
+private void Out ( string o ) {
+  ConsEng.to_console ~= o;
+}
+
+void Output(string ot) {
+  Out(ot);
+}
+
+void Debug_Output(string ot) {
+  if ( ConsEng.console_type == ConsEng.TYPE_DEBUG_IN )
+    Out(ot);
+}

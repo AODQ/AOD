@@ -1,135 +1,123 @@
+module AOD.AOD;
+
 import derelict.opengl3.gl3;
 import derelict.sdl2.sdl;
 import std.string;
 
-module AOD.AOD;
-
-import Camera  = AOD.Camera;
+import AOD.Camera;
 import Console = AOD.Console;
-import Input   = AOD.Input;
-import Object  = AOD.Object;
+import AOD.Input;
+import AOD.Object : Object;
 import Realm   = AOD.Realm;
-import Sounds  = AOD.Sounds;
-import Text    = AOD.Text;
+import AOD.Sounds;
+import AOD.Text;
 import AOD.Vector;
 import AOD.Utility;
 
-SDL_Window* screen = null;
-GLuint[] images;
+static class Engine {
+  SDL_Window* screen = null;
+  GLuint[] images;
 
-Realm* realm = null;
+  Realm realm = null;
 
-uint ms_dt = 0;
+  uint ms_dt = 0;
 
-bool started = 0;
-int start_ticks = 0;
-AOD::Text* fps_display = null;
-float[20] fps = { 0 };
-
-void Initialize(int window_width, int window_height, uint fps,
-                char[] window_name, char[] icon = "") {
-  if ( realm == null ) {
-    if ( window_name == "" )
-      window_name = "Art of Dwarficorn";
-    realm = new Realm(window_width, window_height, window_name, icon);
-    ms_dt = fps;
-  }
-  Camera::Set_Position(Vector(0, 0));
-  Camera::Set_Size(Vector(cast(float)window_width, cast(float)window_height));
+  bool started = 0;
+  int start_ticks = 0;
+  AOD.Text fps_display;
+  float[20] fps = { 0 };
 }
 
-void Initialize_Console(bool debug, SDL_Keycode key, string cons) {
-  if ( debug )
-    Console::console_type = AOD::Console::TYPE_DEBUG_IN;
+void Initialize(int window_width, int window_height, uint _fps,
+                char[] window_name, char[] icon = "") {
+  if ( Engine.realm == null ) {
+    if ( window_name == "" )
+      window_name = "Art of Dwarficorn";
+    Engine.realm = new Realm(window_width, window_height, window_name, icon);
+    Engine.ms_dt = _fps;
+  }
+  Camera.Set_Position(Vector(0, 0));
+  Camera.Set_Size(Vector(cast(float)window_width, cast(float)window_height));
+}
+
+void Initialize_Console(bool debg, SDL_Keycode key, string cons) {
+  if ( dbug )
+    Console.console_type = Console.TYPE_DEBUG_IN;
   else
-    Console::console_type = AOD::Console::TYPE_DEBUG_OUT;
-  Debug_Output("Created new console");
-  Console::key = key;
-  Console::Construct();
+    Console.console_type = Console.TYPE_DEBUG_OUT;
+  Console.Debug_Output("Created new console");
+  Console.key = key;
+  Console.Construct();
 }
 
 void Change_MSDT(Uint32 x) {
   if ( x > 0 )
-    ms_dt = x;
+    Engine.ms_dt = x;
   else
-    Debug_Output("Trying to change the MS DeltaTime to a value <= 0");
+    Console.Debug_Output("Trying to change the MS DeltaTime to a value <= 0");
 }
 
 void Reset() {
-  if ( realm != null )
-    realm->Reset();
+  if ( Engine.realm != null )
+    Engine.realm.Reset();
 }
 void End() {
-  if ( realm != null )
-    realm->~Realm();
-  SDL_DestroyWindow(screen);
+  Engine.realm = null;
+  SDL_DestroyWindow(Engine.screen);
   SDL_Quit();
 }
 
-Object[int] obj_list;
+AOD.Object[int] obj_list;
 
-import core.sync.mutex;
 
-private auto add_obj_mutex = new Mutex;
-
-int Add(AOD::Object o,int layer) {
-  add_obj_mutex.lock();
+int Add(AOD.Object o,int layer) {
   static uint id_counter = 0;
-  if ( realm != null && o && layer >= 0 ) {
-    realm.__Add(o, layer);
+  if ( Engine.realm != null && o && layer >= 0 ) {
+    Engine.realm.__Add(o, layer);
     o.Set_ID(id_counter++);
-    obj_list[o.Ret_ID(), o);
+    /* obj_list[o.Ret_ID(), o); */
     return o.Ret_ID();
   } else {
     if ( o == null )
-      Debug_Output("Error: Adding null text to realm");
+      Console.Debug_Output("Error: Adding null text to realm");
     if ( layer >= 0 )
-      Debug_Output("Error: Negative layer not allowed");
+      Console.Debug_Output("Error: Negative layer not allowed");
     return -1;
   }
-  add_obj_mutex.unlock();
 }
 
-private auto add_text_mutex = new Mutex;
-
-void AOD::Add(AOD::Text t) {
-  add_text_mutex.lock();
-  if ( realm != null && t != null )
-    realm.__Add(t);
+void Add(AOD.Text t) {
+  if ( Engine.realm != null && t != null )
+    Engine.realm.__Add(t);
   else {
     if ( t == null )
-      AOD_Engine::Debug_Output("Error: Adding null text to realm");
+      Console.Debug_Output("Error: Adding null text to realm");
   }
-  add_text_mutex.unlock();
 }
 
-private auto rem_mutex = new Mutex;
-
-void Remove(Object o) {
-  rem_mutex.lock();
-  if ( realm != null )
-    realm.__Remove(o);
-  rem_mutex.unlock();
+void Remove(AOD.Object o) {
+  if ( Engine.realm != null )
+    Engine.realm.__Remove(o);
 }
 
 void Remove(Text* t) {
-  if ( realm != null )
-    realm.__Remove(t);
+  if ( Engine.realm != null )
+    Engine.realm.__Remove(t);
 }
 
 void Set_BG_Colour(GLfloat r, GLfloat g, GLfloat b) {
-  if ( realm == null ) return;
-  realm.Set_BG_Colours(r, g, b);
+  if ( Engine.realm == null ) return;
+  Engine.realm.Set_BG_Colours(r, g, b);
 }
 
 void Run() {
-  if ( realm == null ) return;
+  if ( Engine.realm == null ) return;
   float prev_dt        = 0, // DT from previous frame
         curr_dt        = 0, // DT for beginning of current frame
         elapsed_dt     = 0, // DT elapsed between previous frame and this frame
         accumulated_dt = 0; // DT needing to be processed
-  started = 1;
-  start_ticks = SDL_GetTicks();
+  Engine.started = 1;
+  Engine.start_ticks = SDL_GetTicks();
   SDL_Event _event;
   _event.user.code = 2;
   _event.user.data1 = null;
@@ -138,9 +126,9 @@ void Run() {
 
   // so I can set up keys and not have to rely that update is ran first
   SDL_PumpEvents();
-  Input::Refresh_Input();
+  Input.Refresh_Input();
   SDL_PumpEvents();
-  Input::Refresh_Input();
+  AOD.Input.Refresh_Input();
 
   while ( SDL_PollEvent(&_event) ) {
     switch ( _event.type ) {
@@ -156,14 +144,14 @@ void Run() {
     accumulated_dt += elapsed_dt;
 
     // refresh calculations
-    while ( accumulated_dt >= ms_dt ) {
+    while ( accumulated_dt >= Engine.ms_dt ) {
       // sdl
       SDL_PumpEvents();
-      Input::Refresh_Input();
+      Refresh_Input();
 
       // actual update
-      accumulated_dt -= ms_dt;
-      realm->Update();
+      accumulated_dt -= Engine.ms_dt;
+      Engine.realm.Update();
 
       string tex;
       string to_handle;
@@ -301,24 +289,25 @@ void Run() {
     { // refresh screen
       float _FPS = 0;
       for ( int i = 0; i != 19; ++ i ) {
-        fps[i+1] = fps[i];
-        _FPS += fps[i+1];
+        Engine.fps[i+1] = Engine.fps[i];
+        _FPS += Engine.fps[i+1];
       }
-      fps[0] = elapsed_dt;
-      _FPS += fps[0];
+      Engine.fps[0] = elapsed_dt;
+      _FPS += Engine.fps[0];
 
-      if ( fps_display != null ) {
-        //fps_display->Set_String(std::to_string(int(20000/_FPS)) + " FPS");
+      if ( Engine.fps_display != null ) {
+        /* engine.fps_display->Set_String( */
+        /*                     std::to_string(int(20000/_FPS)) + " FPS"); */
       }
 
-      Console::Refresh();
-      realm->Render(); // render the screen
+      Refresh();
+      Engine.realm.Render(); // render the screen
     }
 
     { // sleep until temp dt reaches ms_dt
       float temp_dt = accumulated_dt;
       temp_dt = cast(float)(SDL_GetTicks()) - curr_dt;
-      while ( temp_dt < AOD_Engine::ms_dt ) {
+      while ( temp_dt < Engine.ms_dt ) {
         SDL_PumpEvents();
         temp_dt = cast(float)(SDL_GetTicks()) - curr_dt;
       }
@@ -329,25 +318,5 @@ void Run() {
   }
 }
 
-float R_MS()         { return cast(float)ms_dt; }
-float To_MS(float x) { return (x*ms_dt)/1000;   }
-
-void D_Output(string out) {
-  /*std::ofstream fil("DEBUG.txt", std::ios::app);
-  fil << out << '\n';
-  fil.close();*/
-  Console::to_console ~= out;
-}
-
-private auto output_lock = new Mutex();
-
-void Output(string out) {
-  output_lock.lock();
-  D_Output(out);
-  output_lock.unlock();
-}
-
-void Debug_Output(string out) {
-  if ( Console::console_type == Console::TYPE_DEBUG_IN )
-      D_Output(out);
-}
+float R_MS()         { return cast(float)Engine.ms_dt; }
+float To_MS(float x) { return (x*Engine.ms_dt)/1000;   }

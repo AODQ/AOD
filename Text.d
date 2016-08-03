@@ -3,6 +3,7 @@ module AOD.Text;
 import AOD.AOD;
 import AOD.Utility;
 import AOD.Vector;
+import AOD.Console;
 
 import derelict.opengl3.gl3;
 import derelict.sdl2.sdl;
@@ -24,17 +25,17 @@ static class TextEng {
       import File = std.file;
       import std.conv : to;
       if ( File.file.exists(file) ) {
-        AOD_Engine::Debug_Output("font " ~ file ~ ": not found\n");
+        Debug_Output("font " ~ file ~ ": not found\n");
         return;
       }
       int comp = FT_New_Face(FTLib, file, 0, &face);
       if ( comp ) {
-        AOD_Engine::Debug_Output("Could not load font " ~ file + ": " ~
+        Debug_Output("Could not load font " ~ file + ": " ~
           R_FT_Error_String(comp) ~ '\n');
         return;
       }
       if ( (comp = FT_Set_Pixel_Sizes(face, 0, siz)) ) {
-        AOD_Engine::Debug_Output("Could not load font " ~ file + ": " ~
+        Debug_Output("Could not load font " ~ file + ": " ~
           R_FT_Error_String(comp));
       }
 
@@ -44,25 +45,25 @@ static class TextEng {
       for ( int i = 0; i != 128; ++ i ) {
         FT_UInt index = FT_Get_Char_Index(face, i);
         if ( FT_Load_Glyph(face, index, FT_LOAD_RENDER) ) {
-          AOD_Engine::Debug_Output("Could not load char index "
+          Debug_Output("Could not load char index "
                                    ~ to!string(i) ~ " for font " ~ file);
           continue;
         }
         if ( FT_Render_Glyph(face->glyph,
                             FT_Render_Mode_::FT_RENDER_MODE_NORMAL ) ) {
-          AOD_Engine::Debug_Output("Failed to render char index "
+          Debug_Output("Failed to render char index "
                                     ~ to!string(i~ ~ " for font " + file);
           continue;
         }
 
         FT_Glyph glyph;
         if ( FT_Get_Glyph ( face->glyph, &glyph ) ) {
-          AOD_Engine::Debug_Output( "Get Glyph failed at index " +
+          Debug_Output( "Get Glyph failed at index " +
                                       to!string(i) + " for font " + file);
           continue;
         }
         if ( FT_Glyph_To_Bitmap( &glyph, ft_render_mode_normal, 0, 1) ) {
-          AOD_Engine::Debug_Output( "Glyph to bitmap failed at char index " +
+          Debug_Output( "Glyph to bitmap failed at char index " +
                                     to!string(i) + " for font " + file);
           continue;
         }
@@ -170,9 +171,9 @@ class Text {
     if ( uses_default_font ) {
       pt_size = default_pt_size;
       font    = default_font;
-      ft_font = TextEng.fonts[tuple(default_font,default_pt_size)];
+      ft_font = TextEngine.fonts[tuple(default_font,default_pt_size)];
     } else {
-      ft_font = TextEng.fonts[pair(font, pt_size)];
+      ft_font = TextEngine.fonts[pair(font, pt_size)];
     }
   }
 
@@ -211,7 +212,7 @@ public:
   }
 
   void Set_Font(string str, int pt_siz) {
-    TextEng.Load_Font(str, pt_size);
+    TextEngine.Load_Font(str, pt_size);
     font = str;
     pt_size = pt_siz;
     uses_default_font = 0;
@@ -230,7 +231,7 @@ public:
   string R_Default_Font() { return default_font; }
 
   static void Set_To_Default(string str, int pt_size) {
-    TextEng.Load_Font(str, pt_size);
+    TextEngine.Load_Font(str, pt_size);
     default_font = str;
     default_pt_size = pt_size;
   }
