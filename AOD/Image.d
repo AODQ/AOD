@@ -1,13 +1,18 @@
+module AODCore.image;
+
 import derelict.opengl3.gl3;
 import derelict.sdl2.sdl;
-module AOD.Image;
+import derelict.devil.il;
+import derelict.devil.ilu;
+//import derelict.devil.ilut;
+import AODCore.console;
+import AODCore.vector;
 
 // contains information of image
 struct SheetContainer {
 public:
   GLuint texture;
   int width, height;
-  this() { }
   this(GLuint t, int w, int h) {
     texture = t;
     width = w;
@@ -21,21 +26,27 @@ public:
   }
 }
 
-// A sheet container that will also contain lcoation of obj inside a sheet,
+// A sheet container that will also contain location of obj inside a sheet,
 // pixel-based coordinates where origin is {0, 0}. Useful for spritesheets,
 // I'm sure there are some other utilities such as image cropping
-struct SheetRect : public SheetContainer {
+struct SheetRect {
 public:
+  GLuint texture;
+  int width, height;
   Vector ul, lr;
-  // nil constructor ( no sheet container, ul/lr will set to 0, 0
-  SheetRect();
   // Creates sheet rect whose image is sheet container, and coordinates
   // are from upper-left (ul) to lower-right (lr), which are relative offsets
   // from the origin {0, 0}
-  SheetRect(const SheetContainer&, AOD::Vector ul, AOD::Vector lr);
+  this(ref SheetContainer sc, ref Vector ul_, ref Vector lr_) {
+    texture = sc.texture;
+    width = sc.width;
+    height = sc.height;
+    ul = ul_;
+    lr = lr_;
+  }
 }
 
-
+import std.string;
 SheetContainer Load_Image(const char* fil) {
   ILuint IL_ID;
   GLuint GL_ID;
@@ -50,20 +61,21 @@ SheetContainer Load_Image(const char* fil) {
       iluFlipImage();
 
     if ( !ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE) ) {
+      import std.conv : to;
       auto t = iluErrorString(ilGetError());
-      AOD_Engine::Debug_Output(t);
-      return 0;
+      Debug_Output(to!string(t));
+      return SheetContainer();
     }
     glBindTexture(GL_TEXTURE_2D, 0);
     glGenTextures(1, &GL_ID);
     glBindTexture(GL_TEXTURE_2D, GL_ID);
     if ( !glIsTexture(GL_ID) ) {
-      AOD::Output("Error generating GL texture");
+      Output("Error generating GL texture");
       return SheetContainer();
     }
     // set texture clamping method
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    /* glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP); */
+    /* glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP); */
 
     // set texture interpolation method
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -77,9 +89,10 @@ SheetContainer Load_Image(const char* fil) {
                ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE, ilGetData());
   } else {
     auto t = ilGetError();
-    AOD_Engine::Debug_Output("Error loading " + std::string(fil) + ": " +
-      iluErrorString(t) + "(" + std::to_string(ilGetError()) + ')');
-    return 0;
+    import std.conv;
+    Debug_Output("Error loading " ~ to!string(fil) ~ ": " ~
+      to!string(iluErrorString(t)) ~ "(" ~ to!string(ilGetError()) ~ ")");
+    return SheetContainer();
   }
   ilDeleteImages(1, &IL_ID);
   return SheetContainer(GL_ID, width, height);

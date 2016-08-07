@@ -1,18 +1,22 @@
-module AOD.Matrix;
+module AODCore.matrix;
 
-import AOD.Vector;
+import AODCore.vector;
 
 struct Matrix {
-  public:
+public:
   float a, b, c, d, tx, ty;
   float rot, prev_rot;
   Vector scale;
 
-  Matrix(float _a = 1, float _b = 0, float _c = 0,
-         float _d = 1, float _tx = 0, float _ty = 0);
-    a = _a, b = _b, c = _c, d = _d, tx = _tx, ty = _ty;
+  this(float _a, float _b, float _c,
+       float _d, float _tx, float _ty) {
+    a = _a; b = _b; c = _c; d = _d; tx = _tx; ty = _ty;
     rot = prev_rot = 0;
-    scale = new Vector( 1,1 ); 
+    scale = Vector( 1,1 ); 
+  }
+
+  static Matrix New() {
+    return Matrix(1, 0, 0, 1, 0, 0);
   }
 
   void Identity() {
@@ -35,7 +39,7 @@ struct Matrix {
     ty = y;
   }
 
-  void Set_Translation(const ref AOD::Vector vec) {
+  void Set_Translation(const ref Vector vec) {
     tx = vec.x;
     ty = vec.y;
   }
@@ -50,7 +54,7 @@ struct Matrix {
   }
 
   void Rotate(float r) {
-    import std.math
+    import std.math;
     float x = cos(r),
           y = sin(r);
 

@@ -1,4 +1,4 @@
-module AOD.ClientVars;
+module AODCore.clientvars;
 import std.string;
 
 struct Keybind {
@@ -9,7 +9,6 @@ public:
 
 int screen_width;
 int screen_height;
-alias Keybind = std::pair<int, std::string>;
 
 void Load_Config() {
   // do later ...

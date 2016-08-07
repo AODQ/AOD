@@ -1,73 +1,84 @@
-module AOD.Vectostatic r;
+module AODCore.vector;
 
 struct Vector {
 public:
   float x, y;
-  this() { x = y = 0; }
   this(float _x, float _y ) { x = _x; y = _y; }
   this(int   _x, int   _y ) { x = cast(float)_x; y = cast(float)_y; }
   this(Vector v) { x = v.x; y = v.y; }
 
-  ref Vector opAssign(Vector rhs) {
+  Vector opAssign(Vector rhs) {
     x = rhs.x;
     y = rhs.y;
     return this;
   }
-  ref Vector opBinary(string op)(Vector rhs)   if ( op == "+" ) {
-    return new Vector(x + rhs.x, y + rhs.y);
+  Vector opBinary(string op)(Vector rhs)   if ( op == "+" ) {
+    return Vector(x + rhs.x, y + rhs.y);
   }
-  ref Vector opOpAssign(string op)(Vector rhs) if ( op == "+" ) {
+  Vector opBinary(string op)(float rhs)    if ( op == "+" ) {
+    return Vector(x + rhs, y + rhs);
+  }
+  Vector opOpAssign(string op)(Vector rhs) if ( op == "+" ) {
     x += rhs.x;
     y += rhs.y;
     return this;
   }
-  ref Vector opOpAssign(string op)(int rhs)    if ( op == "+" ) {
+  Vector opOpAssign(string op)(float rhs)  if ( op == "+" ) {
     x += rhs;
     y += rhs;
     return this;
   }
-  ref Vector opBinary(string op)(Vector rhs)   if ( op == "-" ) {
-    return new Vector(x - rhs.x, y - rhs.y);
+  Vector opBinary(string op)(Vector rhs)   if ( op == "-" ) {
+    return Vector(x - rhs.x, y - rhs.y);
   }
-  ref Vector opOpAssign(string op)(Vector rhs) if ( op == "-" ) {
+  Vector opBinary(string op)(float rhs)    if ( op == "-" ) {
+    return Vector(x - rhs, y - rhs);
+  }
+  Vector opOpAssign(string op)(Vector rhs) if ( op == "-" ) {
     x -= rhs.x;
     y -= rhs.y;
     return this;
   }
-  ref Vector opOpAssign(string op)(int rhs)    if ( op == "-" ) {
+  Vector opOpAssign(string op)(float rhs)  if ( op == "-" ) {
     x -= rhs;
     y -= rhs;
     return this;
   }
-  ref Vector opBinary(string op)(Vector rhs)   if ( op == "*" ) {
-    return new Vector(x * rhs.x, y * rhs.y);
+  Vector opBinary(string op)(Vector rhs)   if ( op == "*" ) {
+    return Vector(x * rhs.x, y * rhs.y);
   }
-  ref Vector opOpAssign(string op)(Vector rhs) if ( op == "*" ) {
+  Vector opBinary(string op)(float rhs)    if ( op == "*" ) {
+    return Vector(x * rhs, y * rhs);
+  }
+  Vector opOpAssign(string op)(Vector rhs) if ( op == "*" ) {
     x *= rhs.x;
     y *= rhs.y;
     return this;
   }
-  ref Vector opOpAssign(string op)(int rhs)    if ( op == "*" ) {
+  Vector opOpAssign(string op)(float rhs)  if ( op == "*" ) {
     x *= rhs;
     y *= rhs;
     return this;
   }
-  ref Vector opBinary(string op)(Vector rhs)   if ( op == "/" ) {
-    return new Vector(x / rhs.x, y / rhs.y);
+  Vector opBinary(string op)(Vector rhs)   if ( op == "/" ) {
+    return Vector(x / rhs.x, y / rhs.y);
   }
-  ref Vector opOpAssign(string op)(Vector rhs) if ( op == "/" ) {
+  Vector opBinary(string op)(float rhs)    if ( op == "/" ) {
+    return Vector(x / rhs, y / rhs);
+  }
+  Vector opOpAssign(string op)(Vector rhs) if ( op == "/" ) {
     x /= rhs.x;
     y /= rhs.y;
     return this;
   }
-  ref Vector opOpAssign(string op)(int rhs)    if ( op == "/" ) {
+  Vector opOpAssign(string op)(float rhs)  if ( op == "/" ) {
     x /= rhs;
     y /= rhs;
     return this;
   }
   string opCast(T)() if (is(T == string)) {
     import std.conv : to;
-    return "< " + to!string(x) + ", " + to!string(y) + " >";
+    return "< " ~ to!string(x) ~ ", " ~ to!string(y) ~ " >";
   }
 
   //                      utility methods
@@ -82,7 +93,7 @@ public:
 
   import std.math;
 
-  float Distance(const ref Vector _vector) {
+  float Distance(Vector _vector) {
     return sqrt((x*x - _vector.x*_vector.x) + (y*y - _vector.y*_vector.y));
   }
 
@@ -90,7 +101,7 @@ public:
     return atan2(y, x);
   }
 
-  float Angle(const ref Vector _vector) {
+  float Angle(Vector _vector) {
     return atan2(_vector.y - y, _vector.x - x);
   }
 
@@ -98,13 +109,13 @@ public:
     return sqrt((x*x) + (y*y));
   }
 
-  float Dot_Product(const ref Vector _vector) {
+  float Dot_Product(Vector _vector) {
     return x * _vector.x + y * _vector.y;
   }
 
 
   // projects other vector onto this one
-  void Project(const ref Vector _vector) {
+  void Project(Vector _vector) {
     float dot_prod = Dot_Product(_vector);
     x = (dot_prod / (pow(_vector.x, 2 ) +
                      pow(_vector.y, 2 )) ) * _vector.x;
@@ -113,22 +124,23 @@ public:
   }
 
   // gives right hand normal of vector
-  void Right_Normal(const ref Vector vec) {
+  void Right_Normal(Vector vec) {
   x =  (vec.x - x);
   y = -(vec.y - y);
   }
   // gives left hand normal of vector
-  void Left_Normal(const ref Vector vec) {
+  void Left_Normal(Vector vec) {
   x = -(vec.x - x);
   y =  (vec.y - y);
   }
 
-  static Vector Reflect(const Vector I, const Vector N) {
-    return I - (N*2.f * I) * N;
+  static Vector Reflect(Vector I, Vector N) {
+    return I - (N*2.0f * I) * N;
   }
 
-  import AOD.Matrix;
-  static Vector Transform(const ref Matrix mat, const ref Vector vec) {
+  import AODCore.matrix;
+
+  static Vector Transform(Matrix mat, Vector vec) {
     Vector v;
     v.x = vec.x * mat.a + vec.y * mat.c + mat.tx;
     v.y = vec.x * mat.b + vec.y * mat.d + mat.ty;

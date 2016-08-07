@@ -1,27 +1,27 @@
+module AODCore.entity;
+
 import derelict.opengl3.gl3;
 import derelict.sdl2.sdl;
 
-import AOD.Matrix;
-import AOD.Realm;
+import AODCore.matrix;
+import AODCore.realm;
+import AODCore.vector;
+import AODCore.image;
+import AODCore.console;
 
-import AOD.Matrix;
-import AOD.Vector;
-
-module AOD.Object;
-class Object {
+class Entity {
 private:
   void Refresh_Transform() {
     matrix.Compose(position, rotation, scale);
     transformed = true;
   }
 public:
-  enum class Type { Circle, AABB, Polygon, Ray, nil };
+  enum Type { Circle, AABB, Polygon, Ray, nil };
 protected:
   GLuint image;
   int ID;
   float rotation,
         rotation_velocity;
-  Matrix matrix;
   Matrix matrix;
   Type type;
   Vector position,
@@ -32,13 +32,14 @@ protected:
   int layer;
   float alpha;
   bool flipped_x, flipped_y;
-  GLfloat _UV[8];
-  friend AOD_Engine::Realm; // to access layer
+  GLfloat[8] _UV;
   bool is_coloured, visible, static_pos;
   float red, green, blue;
 
   bool transformed;
 public:
+  int R_Layer() { return layer; }
+
   static immutable(float[8]) Vertices = [
     -0.5f, -0.5f,
     -0.5f,  0.5f,
@@ -46,10 +47,12 @@ public:
      0.5f,  0.5f
   ];
 
-  this(Type _type = Type.nil) {
+  this(int _layer = 0, Type _type = Type.nil) {
+    layer = _layer;
     type = _type;
     alpha = 1;
     Set_UVs(Vector(0,0), Vector(1,1));
+    matrix = Matrix.New();
     position = Vector(0,0);
     rotation = 0;
     rotation_velocity = 0;
@@ -60,24 +63,24 @@ public:
     visible = 1;
     flipped_x = 0;
     flipped_y = 0;
-    rotate_origin = {0, 0};
+    rotate_origin = Vector( 0, 0 );
     scale = Vector( 1, 1 );
     Refresh_Transform();
   }
   void Set_ID(int id) { ID = id; }
-  int Ret_ID() const { return ID; }
+  int Ret_ID() { return ID; }
   void Set_Position(float x, float y) {
     position = Vector(x, y);
     Refresh_Transform();
   }
-  void Set_Position(const ref Vector v) {
+  void Set_Position(Vector v) {
     position = v;
   }
   void Add_Position(float x, float y) {
     position.x += x;
     position.y += y;
   }
-  void Add_Position(const ref Vector v) {
+  void Add_Position(Vector v) {
     position += v;
   }
   Vector R_Position() { return position;  }
@@ -87,7 +90,7 @@ public:
     assert(index <= 0);
   } body {
     if ( index <= 0 ) {
-      AOD_Engine::Debug_Output("Error, image texture not found");
+      Debug_Output("Error, image texture not found");
       return;
     }
 
@@ -107,12 +110,12 @@ public:
     }
     image = index;
   }
-  void Set_Sprite(const ref SheetContainer sc) {
+  void Set_Sprite(SheetContainer sc) {
     image = sc.texture;
     image_size.x = sc.width;
     image_size.y = sc.height;
   }
-  void Set_Sprite(const ref SheetRect sr) {
+  void Set_Sprite(SheetRect sr) {
     image = sr.texture;
     image_size.x = sr.width;
     image_size.y = sr.height;
@@ -126,10 +129,10 @@ public:
   }
   float R_Rotation() { return rotation; }
 
-  void Apply_Force(const ref Vector force) {
+  void Apply_Force(Vector force) {
     velocity += force;
   }
-  void Set_Velocity(const ref Vector vel) {
+  void Set_Velocity(Vector vel) {
     velocity = vel;
   }
   void Set_Velocity(float x, float y) {
@@ -152,7 +155,7 @@ public:
             Vector(right_x , bot_y));
   }
 
-  void Set_UVs(const ref Vector left, const ref Vector right,
+  void Set_UVs(Vector left, Vector right,
               bool reset_flip = 1) {
     _UV[0] = left.x;
     _UV[1] = right.y;
@@ -162,7 +165,7 @@ public:
     _UV[5] = right.y;
     _UV[6] = right.x;
     _UV[7] = left.y;
-    if ( f ) {
+    if ( reset_flip ) {
       flipped_x = 0;
       flipped_y = 1;
     }
@@ -173,18 +176,19 @@ public:
     right.x = _UV[4];
     right.y = _UV[5];
   }
+  auto R_UV_Array() { return _UV; }
   void Flip_X() {
-    Set_UVs( AOD::Vector(  _UV[ 4], _UV[ 3] ),
-              AOD::Vector( _UV[ 0], _UV[ 1] ), false );
+    Set_UVs( Vector(  _UV[ 4], _UV[ 3] ),
+             Vector(  _UV[ 0], _UV[ 1] ), false );
     flipped_x ^= 1;
   }
   void Flip_Y() {
-    Set_UVs( AOD::Vector(  _UV[ 0], _UV[ 1] ),
-              AOD::Vector( _UV[ 4], _UV[ 3] ), false );
+    Set_UVs( Vector(  _UV[ 0], _UV[ 1] ),
+             Vector(  _UV[ 4], _UV[ 3] ), false );
     flipped_y ^= 1;
   }
 
-  void Set_Size(const ref Vector vec, bool scale_image = 0) {
+  void Set_Size(Vector vec, bool scale_image = 0) {
     size = vec;
     if ( scale_image )
       Set_Image_Size(vec);
@@ -193,7 +197,7 @@ public:
   void Set_Size(int x, int y, bool scale_image = 0) {
     Set_Size(Vector(x, y), scale_image);
   }
-  void Set_Image_Size(const ref Vector vec) {
+  void Set_Image_Size(Vector vec) {
     image_size = vec;
   }
   void Set_Visible(bool v) {
@@ -213,7 +217,7 @@ public:
     static_pos = s;
   }
 
-  void Set_Origin(const ref AOD::Vector v) {
+  void Set_Origin(Vector v) {
     rotate_origin = v;
   }
   // will reset origin to image_size/2
@@ -235,122 +239,110 @@ public:
   Type R_Type()     { return type;   }
   Matrix R_Matrix() { return matrix; }
   // ---- utility ----
-  abstract void Update();
-  Collision_Info Collision(Object* o) {
+  void Update() {};
+  Collision_Info Collision(Entity* o) {
     return Collision_Info();
   }
-
-  static const float Vertices[8];
 };
 
-  // -------------- POLY OBJ --------------------------------------------------
+// -------------- POLY OBJ --------------------------------------------------
 
-  class PolyObj : public Object {
-  protected:
-    Vector[] vertices, vertices_transform;
-    void Build_Transform() {}
-  public:
-    this() {
-      super(Type.Polygon);
-      vertices = [];
-    }
-    PolyObj(Vector[] vertices, Vector off = [ 0, 0 ]) {
-      super(Type.Polygon);
-      vertices = vert;
-      Set_Position(off);
-    }
+class PolyEnt : Entity {
+protected:
+  Vector[] vertices, vertices_transform;
+  void Build_Transform() {}
+public:
+  this() {
+    super(Type.Polygon);
+    vertices = [];
+  }
+  this(Vector[] vertices_, Vector off = Vector( 0, 0 )) {
+    super(Type.Polygon);
+    vertices = vertices_;
+    Set_Position(off);
+  }
 
-    // ---- ret/set ----
-    // will override previous vectors
-    void Set_Vertices(Vector[] , bool reorder = 1) {
-      vertices = vert;
-      if ( reorder ) {
-        Order_Vertices(vertices);
-      }
-      Build_Transform();
+  // ---- ret/set ----
+  // will override previous vectors
+  void Set_Vertices(Vector[] vertices_, bool reorder = 1) {
+    vertices = vertices_;
+    if ( reorder ) {
+      Order_Vertices(vertices);
     }
-    Vector[] R_Vertices() {
-      return vertices;
-    }
-    Vector[] R_Transformed_Vertices(bool force = 0) {
-      // check if transform needs to be updated
-      if ( transformed || force ) {
-        transformed = 0;
-        vertices_transform.clear();
+    Build_Transform();
+  }
+  Vector[] R_Vertices() {
+    return vertices;
+  }
+  Vector[] R_Transformed_Vertices(bool force = 0) {
+    // check if transform needs to be updated
+    if ( transformed || force ) {
+      transformed = 0;
+      vertices_transform = [];
 
-        for ( auto i : vertices ) {
-          vertices_transform.push_back(
-            Vector.Transform(R_Matrix(), i));
-        }
-      }
-      
-      return vertices_transform;
+      foreach ( i; vertices )
+        vertices_transform ~= Vector.Transform(R_Matrix(), i);
     }
+    
+    return vertices_transform;
+  }
 
-    // ---- utility ----
+  // ---- utility ----
 
-    // Returns information on current collision state with another poly
-    Collision_Info Collide(PolyObj* poly, AOD::Vector velocity) {
-      return PolyPolyColl(this, poly, velocity);
-    }
-    Collision_Info Collide(AABBObj* aabb, AOD::Vector velocity) {
-      return Collision_Info(); 
-    }
-  };
+  // Returns information on current collision state with another poly
+  Collision_Info Collide(PolyEnt poly, Vector velocity) {
+    return PolyPolyColl(this, poly, velocity);
+  }
+  Collision_Info Collide(AABBEnt aabb, Vector velocity) {
+    return Collision_Info(); 
+  }
+};
 
-  class AABBObj : public PolyObj {
-  public:
-    this(Vector size = Vector(0, 0)) {
-      super();
-      type = Type.AABB;
-      Set_Vertices({{-size.x/2.f, -size.y/2.f},
-                    {-size.x/2.f,  size.y/2.f},
-                    { size.x/2.f,  size.y/2.f},
-                    { size.x/2.f, -size.y/2.f}});
-    }
-    AABBObj(Vector size = Vector( 0,0 ), Vector pos = Vector( 0,0 )) {
-      this(size);
-      position = pos;
-    }
+class AABBEnt : PolyEnt {
+public:
+  this(Vector size = Vector(0, 0)) {
+    super();
+    type = Type.AABB;
+    Set_Vertices([Vector(-size.x/2.0, -size.y/2.0),
+                  Vector(-size.x/2.0,  size.y/2.0),
+                  Vector( size.x/2.0,  size.y/2.0),
+                  Vector( size.x/2.0, -size.y/2.0)]);
+  }
+  this(Vector size = Vector( 0,0 ), Vector pos = Vector( 0,0 )) {
+    this(size);
+    position = pos;
+  }
 
-    // ---- utility ----
+  // ---- utility ----
 
-    // Returns information on current collision with an AABB
-    Collision_Info Collide(AABBObj* aabb, AOD::Vector velocity) {
-      return Collision_Info();
-    }
-    Collision_Info Collide(PolyObj* poly, AOD::Vector velocity) {
-      return Collision_Info();
-    }
-  };
+  // Returns information on current collision with an AABB
+  override Collision_Info Collide(AABBEnt aabb, Vector velocity) {
+    return Collision_Info();
+  }
+  override Collision_Info Collide(PolyEnt poly, Vector velocity) {
+    return Collision_Info();
+  }
+};
 
-  // Valuable information from a collision, "translation"
-  // could mean different things dependent on the collision type
-  struct Collision_Info {
-  public:
-    bool collision,
-         will_collide;
-    Vector translation,
-           projection, normal;
-    PolyObj obj;
-    // collision will always be true in def constructor
-    this() {
-      collision = 1;
-      will_collide = 0;
-    }
-    this(this) { }
-    this(bool c) {
-      collision = c;
-      will_collide = 0;
-    }
-    this(ref Vector t, bool c, bool wc) {
-      collision = c;
-      will_collide = wc;
-      translation = t;
-    }
-  };
-}
-
+// Valuable information from a collision, "translation"
+// could mean different things dependent on the collision type
+struct Collision_Info {
+public:
+  bool collision,
+       will_collide;
+  Vector translation,
+         projection, normal;
+  PolyEnt obj;
+  this(bool c) {
+    collision = c;
+    will_collide = 0;
+  }
+  this(ref Vector t, bool c, bool wc) {
+    collision = c;
+    will_collide = wc;
+    translation = t;
+  }
+};
 
 // -------------------- collision code -----------------------------------------
 
@@ -361,12 +353,12 @@ private Vector Get_Axis(Vector[] vertices, int i) {
   return axis;
 }
 
-private Vector Project_Poly(Vector axis, Vector[] poly,
-                            ref float min, ref float max) {
+private void Project_Poly(ref Vector axis, ref Vector[] poly,
+                     ref float min, ref float max) {
   min = axis.Dot_Product(poly[0]);
   max = min;
 
-  foreach ( i ; 1 .. poly.length )
+  foreach ( i ; 1 .. poly.length ) {
     float t = poly[i].Dot_Product ( axis );
     if ( t < min ) min = t;
     if ( t > max ) max = t;
@@ -379,15 +371,15 @@ private float Project_Dist(float minA, float maxA, float minB, float maxB) {
                   : (minA - maxB);
 }
 
-private Collision_Info PolyPolyColl(PolyObj polyA, PolyObj polyB,
+private Collision_Info PolyPolyColl(PolyEnt polyA, PolyEnt polyB,
                                     Vector velocity) {
   // -- variable definitions --
   // the minimum distance needed to translate out of collision
   float min_dist = float.max;
-  Vector trans_vec ( 0, 0 );
+  Vector trans_vec;
 
-  Vector[] vertsA = polyA->R_Transformed_Vertices(),
-           vertsB = polyB->R_Transformed_Vertices();
+  Vector[] vertsA = polyA.R_Transformed_Vertices(),
+           vertsB = polyB.R_Transformed_Vertices();
 
   Collision_Info ci = Collision_Info();
   ci.will_collide = true;
@@ -396,8 +388,7 @@ private Collision_Info PolyPolyColl(PolyObj polyA, PolyObj polyB,
   for ( int i = 0; i != vertsA.length + vertsB.length; ++ i ) {
     bool vA = (i<vertsA.length);
     // get the axis from the edge (we have to build the edge from vertices tho)
-    auto& axis = Get_Axis((vA?vertsA:vertsB),
-                          (vA?i: i - vertsA.length));
+    auto axis = Get_Axis((vA?vertsA:vertsB), cast(int)(vA?i: i - vertsA.length));
     // project polygons onto axis
     float minA, minB, maxA, maxB;
     Project_Poly(axis, vertsA, minA, maxA);
@@ -419,12 +410,12 @@ private Collision_Info PolyPolyColl(PolyObj polyA, PolyObj polyB,
     if ( !ci.will_collide && !ci.will_collide) break;
 
     // check if this is minimum translation
-    dist = abs(dist);
+    dist = dist > 0 ? dist : -dist;
     if ( dist < min_dist ) {
       min_dist = dist;
       trans_vec = axis;
       ci.projection = axis;
-      auto d = (polyA.R_Position() - polyB.R_Position());
+      auto d = polyA.R_Position() - polyB.R_Position();
       if ( d.Dot_Product( trans_vec ) < 0 )
         trans_vec *= -1;
     }
@@ -434,4 +425,60 @@ private Collision_Info PolyPolyColl(PolyObj polyA, PolyObj polyB,
   if ( ci.will_collide )
     ci.translation = trans_vec * min_dist;
   return ci;
+}
+
+
+struct Vert_Pair {
+  float dist;
+  Vector vert;
+  this(float dist_, Vector vert_) {
+    dist = dist_;
+    vert = vert_;
+  }
+};
+
+static void Order_Vertices(ref Vector[] verts) {
+  // get centroid, same time preparing to calculate angle of verts
+  float centx = 0, centy = 0;
+  Vert_Pair[] va;
+  foreach ( i; verts ) {
+    centx += i.x;
+    centy += i.y;
+    va ~= Vert_Pair(0, i);
+  }
+  centx /= verts.length;
+  centy /= verts.length;
+  verts = [];
+
+  foreach ( i; va ) {
+    import std.math;
+    i.dist = atan2(i.vert.y - centy, i.vert.x - centx);
+    //std::cout << "ATAN2F( " << i.second.y << " - " << centy << ", "
+    //                        << i.second.x << " - " << centx << ") = "
+    //                        << i.first << '\n';
+  }
+  
+  import std.algorithm;
+  sort!((x, y) => x.dist < y.dist)(va);
+  // put back in vector
+  foreach ( i; va )
+    verts ~= i.vert;
+
+  /*// double check that it is in sorted CCW order
+  int count = 0;
+  for ( int i = 0; i != verts.size(); ++ i ) {
+    int pt1 = ( i + 1 ) % verts.size(),
+        pt2 = ( i + 2 ) % verts.size();
+    int z = ( verts[pt1].x - verts[i].x ) * ( verts[pt2].y - verts[pt1].y );
+    z -=    ( verts[pt1].y - verts[i].y ) * ( verts[pt2].x - verts[pt1].x );
+    if      ( z < 0 ) -- count;
+    else if ( z > 0 ) ++ count;
+  }
+  if ( count <= 0 ) {
+    std::cout << "ERROR, polygon is clockwise: " << count << '\n';
+    std::cout << "CENT: " << centx << ", " << centy << '\n';
+    for ( int i = 0; i != verts.size(); ++ i )
+      std::cout << verts[i] << '\n';
+    std::cout << "----------------------------\n";
+  }*/
 }
