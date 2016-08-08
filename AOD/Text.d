@@ -1,3 +1,18 @@
+/**
+  Used to render fonts to the screen
+Example:
+---
+  import AOD;
+  Text.Set_Default_Font("DejaVuSansMono.ttf", 13);
+  AOD.Add(new Text("Hello, World!", AOD.R_Window_Width()/2, 40));
+---
+*/
+/**
+Macros:
+  PARAM = <u>$1</u>
+
+  PARAMDESC = <t style="padding-left:3em">$1</t>
+*/
 module AODCore.text;
 
 import AODCore.utility;
@@ -165,6 +180,12 @@ private TextEng.Font Load_Font(string fil, int siz) {
   return TextEng.fonts[font_pair];
 }
 
+/**
+  Describes the font, position and text to be rendered to the screen. Uses
+  default font if one is set, but you can also allocate it a different font.
+  <br>
+  Unlike Entity, this should probably never be inherited from
+*/
 class Text {
   Vector position;
   string msg, font_name;
@@ -199,27 +220,50 @@ class Text {
         Refresh_Message();
   }
 public:
+  /**
+    Params:
+      pos_x = $(PARAMDESC Position of the text on the x-axis)
+      pos_y = $(PARAMDESC Position of the text on the y-axis)
+      str_  = $(PARAMDESC message to the rendered to the screen)
+  */
   this(int pos_x, int pos_y, string str_) {
     position = Vector(pos_x, pos_y);
     Redefault(str_);
   }
 
+  /**
+    Params:
+      pos  = $(PARAMDESC Position of the text)
+      str_ = $(PARAMDESC message to be rendered to the screen)
+  */
   this(Vector pos, string str_) {
     position = Vector(pos);
     Redefault(str_);
   }
 
+  /** */
   void Set_Position(Vector v)          { position = v;                   }
+  /** */
   void Set_Position(float x, float y)  { position.x = x; position.y = y; }
+  /** */
+  Vector R_Position() { return position; }
+  /** Sets message to be rendered */
   void Set_String(string str_)         { msg = str_;                     }
-  void Set_Colour(int r, int g, int b) {                                 }
+  /** WIP (disabled(!)) */
+  @disable void Set_Colour(int r, int g, int b) {                        }
+  /** 
+    Params:
+      t = $(PARAMDESC Determines if the text should be rendered to the screen)
+  */
   void Set_Visible(bool t)             { visible = t;                    }
+  /** Sets font to default font */
   void Set_To_Default() {
     uses_default_font = 1;
     if ( default_font != "" )
       Refresh_Message();
   }
 
+  /** Sets current font used by this text */
   void Set_Font(string str, int pt_siz) {
     Load_Font(str, pt_size);
     font = str;
@@ -228,22 +272,29 @@ public:
     Refresh_Message();
   }
 
-  Vector R_Position() { return position; }
+  /** Returns: String of the font (file location)*/
   string R_Font()     {
     if ( ft_font is null ) return default_font;
     else                   return font;
   }
+  /** Returns: The Font object */
   ref TextEng.Font R_FT_Font() { return ft_font; }
+  /** Returns: The message rendered to screen */
   string R_Str() { return msg; }
+  /** */
   bool R_Visible() { return visible; }
 
-  string R_Default_Font() { return default_font; }
-
+  /*
+Params:
+  str     = $(PARAMDESC File of the font to be used)
+  pt_size = $(PARAMDESC point size of the font)
+  */
   static void Set_Default_Font(string str, int pt_siz) {
     Load_Font(str, pt_siz);
     default_font = str;
     default_pt_size = pt_siz;
   }
+  /** */
   static string R_Default_Font() { return default_font; }
 }
 

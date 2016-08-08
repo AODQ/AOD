@@ -1,4 +1,40 @@
+/**
+  <br><br>
+  The main interface to Art of Dwarficorn. Importing this file alone will
+  give you access to the majority of the library. The functions defined here
+  are only part of the Realm interface.
+  <br>
+Example:
+<br>
+---
+// This is the "standard" way to initialize the engine. The console is set up
+// first so that errors can be received as the AOD Engine is initialized.
+// Afterwards the camera is adjusted to the center of the screen, the font is
+// loaded , and the console key is assigned. Then we load the key config
+void Init () {
+  import AOD;
+  Console.console_open = false;
+  Console.Set_Console_Output_Type(AOD.Console.Type.Debug_In);
+  Initialize(16, "ART OF DWARFICORN", 640, 480);
+  Camera.Set_Size(AOD.Vector(AOD.R_Window_Width(), AOD.R_Window_Height()));
+  Camera.Set_Position(AOD.Vector(AOD.R_Window_Width() /2,
+                                     AOD.R_Window_Height()/2));
+  Text.Set_Default_Font("assets/DejaVuSansMono.ttf", 13);
+  Console.Initialize(Console.Type.Debug_In);
+  Set_BG_Colour(.08, .08, .095);
+  Load_Config();
+}
+---
+*/
+/**
+Macros:
+  PARAM = <u>$1</u>
+
+  PARAMDESC = <t style="padding-left:3em">$1</t>
+*/
 module AOD;
+
+
 
 import derelict.opengl3.gl3;
 import derelict.opengl3.gl;
@@ -21,28 +57,49 @@ static import AODCore.camera;
 
 private AODCore.realm.Realm realm = null;
 
-void Initialize(uint fps, string name, int width, int height, string ico = "")
+/** Initializes the engine
+  Params:
+    msdt   = $(PARAMDESC Amount of milliseconds between each update frame call)
+    name   = $(PARAMDESC Name of the application (for the window title))
+    width  = $(PARAMDESC Window X dimension)
+    height = $(PARAMDESC Window Y dimension)
+    ico    = $(PARAMDESC File location of the icon to use for the application)
+*/
+void Initialize(uint msdt, string name, int width, int height, string ico = "")
 in {
   assert(realm is null);
 } body {
   if ( name == "" )
     name = "Art of Dwarficorn";
-  realm = new AODCore.realm.Realm(width, height, fps, name.ptr, ico.ptr);
+  realm = new AODCore.realm.Realm(width, height, msdt, name.ptr, ico.ptr);
 }
+/** Changes the amount of milliseconds between each update frame call */
 void Change_MSDT(Uint32 ms_dt) in { assert(realm !is null); } body {
   realm.Change_MSDT(ms_dt);
 }
-void Reset() in { assert(realm  is null); } body { /* ... todo ... */ }
+/** Resets the engine */
+@disable void Reset() in { assert(realm  is null); } body { /* ... todo ... */ }
+/** Ends the engine and deallocates all resources */
 void End()   in { assert(realm !is null); } body {
   destroy(realm);
   realm = null;
 }
 
+/** Adds entity to the engine to be updated and rendered */
 int  Add(Entity o)    in {assert(realm !is null);} body { return realm.Add(o); }
+/** Adds text to the engine to be updated and rendered */
 void Add(Text t)      in {assert(realm !is null);} body {        realm.Add(t); } 
+/** Removes the entity from the engine and deallocates it */
 void Remove(Entity o) in {assert(realm !is null);} body {     realm.Remove(o); }
+/** Removes the text from the engine and deallocates it */
 void Remove(Text t)   in {assert(realm !is null);} body {     realm.Remove(t); }
 
+/** Sets the background colour when rendering
+  Params:
+    r = $(PARAMDESC Red)
+    g = $(PARAMDESC Green)
+    b = $(PARAMDESC Blue)
+*/
 void Set_BG_Colour(GLfloat r, GLfloat g, GLfloat b)
 in {
   assert(realm !is null);
@@ -50,19 +107,29 @@ in {
   realm.Set_BG_Colours(r, g, b);
 }
 
+/** Runs the engine (won't return until SDL_Quit is called) */
 void Run() in { assert(realm !is null); } body {
   realm.Run();
 }
 
+/** Returns the current MS per frame */
 float R_MS()         { return realm.R_MS();   }
+/** Calculates the minimal amount of frames required for the duration to occur
+  Params: 
+    x = $(PARAMDESC duration)
+*/
 float To_MS(float x) { return realm.To_MS(x); }
 
+/**
+  Return:
+    Returns the window width in pixels
+*/
 int R_Window_Width()  { return realm.R_Width();  }
+/**
+  Return:
+    Returns the window height in pixels
+*/
 int R_Window_Height() { return realm.R_Height(); }
-
-// will add Text to realm & remove old one
-void Set_FPS_Display(AODCore.text.Text fps) in { assert(realm !is null); }
-body { realm.Set_FPS_Display(fps);}
 
 // --------------------- Vector/Matrix/Utility ---------------------------------
 
@@ -85,6 +152,9 @@ public: static:
   alias Max_float = AODCore.utility.Max_float;
   alias Min_float = AODCore.utility.Min_float;
   alias Epsilon   = AODCore.utility.Epsilon;
+
+  alias Load_INI  = AODCore.utility.Load_INI;
+  alias INI_Data  = AODCore.utility.INI_Data;
 }
 
 // --------------------- Camera ------------------------------------------------
@@ -103,8 +173,6 @@ public: static:
 class ClientVars {
 public: static:
   alias Keybind       = AODCore.clientvars.Keybind;
-  alias screen_width  = AODCore.clientvars.screen_width;
-  alias screen_height = AODCore.clientvars.screen_height;
   alias Load_Config   = AODCore.clientvars.Load_Config;
 }
 
@@ -158,6 +226,19 @@ class Sound {
 // --------------------- Text --------------------------------------------------
 
 alias Text = AODCore.text.Text;
+
+// ------------------- misc functions ------------------------------------------
+// these functions are required to be put down here so that the documentation
+// generator can use these aliases rather the internal names
+// (AODCore.text.Text -> AOD.Text)
+
+/** Sets current FPS Display text and adds it to the engine
+  Params:
+    fps_text = $(PARAMDESC A text that the engine will use to calculate the FPS.
+               You have to manually set the position and font yourself)
+*/
+void Set_FPS_Display(AOD.Text fps_text) in { assert(realm !is null); }
+body { realm.Set_FPS_Display(fps_text);}
 
 // ------------------- s c r a p s  --------------------------------------------
 /* case SDL_MOUSEWHEEL: */

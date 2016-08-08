@@ -1,11 +1,13 @@
+/**
+  Gives a form of communication between the user and the program.
+*/
+/**
+Macros:
+  PARAM = <u>$1</u>
+
+  PARAMDESC = <t style="padding-left:3em">$1</t>
+*/
 module AODCore.console;
-
-enum Type {
-  None      = 0,
-  Debug_In  = 1,
-  Debug_Out = 2
-}
-
 import AODCore.text;
 import AODCore.entity;
 import AODCore.input;
@@ -15,6 +17,72 @@ import derelict.opengl3.gl3;
 import std.stdio : writeln;
 import derelict.sdl2.sdl;
 import std.string;
+
+/** Initializes the Console (it will not function until this is done,
+    meaning that if you dislike the Console you do not need to
+    use it)
+params:
+  console_type = $(PARAMDESC Sets the console_type (see Type))
+  key          = $(PARAMDESC Sets key for which console will open to)
+*/
+void Initialize(Type console_type, SDL_Keycode key = SDL_SCANCODE_GRAVE) {
+  ConsEng.console_type = console_type;
+  Debug_Output("Created new console");
+  ConsEng.key = key;
+  ConsEng.Construct();
+}
+
+/** Outputs a message to the console
+Params:
+  msg = $(PARAMDESC A message that has no new lines)
+*/
+void Output(string msg) {
+  writeln(msg);
+  Out(msg);
+}
+
+/** Should be used only by the AOD engine but if you want to have messages that
+    only appear in a debug enviornment then this would be a good choice.
+*/
+void Debug_Output(string ot) {
+  writeln("AOD SAYS: " ~ ot);
+  if ( ConsEng.console_type == Type.Debug_In )
+    Out(ot);
+}
+
+/** Determines if the console is open or not */
+bool console_open = 0;
+
+/** Sets the key for which the console will open to */
+void Set_Open_Console_Key(SDL_Keycode k) {
+  ConsEng.key = k;
+}
+
+/** Sets the amount of messages the console will keep */
+void Set_Console_History(int history_limit) {
+  ConsEng.console_history = history_limit;
+}
+
+/** */
+void Set_Console_Output_Type(Type otype) {
+  ConsEng.console_type = otype;
+}
+
+private void Out ( string o ) {
+  ConsEng.to_console ~= o;
+}
+
+/**
+  Used to determine the type of console output
+*/
+enum Type {
+  /** Disable console */
+  None      = 0,
+  /** Allow debug messages generated from the AOD engine to be outputted */
+  Debug_In  = 1,
+  /** Forbid debug messages generated from the AOD engine to be outputted */
+  Debug_Out = 2
+}
 
 class ConsEng {
 static:
@@ -40,10 +108,10 @@ static:
     cursor.Set_Visible(0);
     cursor.Set_Position(13, 96);
     background = new Entity(50);
-    background.Set_Image_Size(Vector(screen_width, 103));
-    background.Set_Visible(0);
-    background.Set_Position(screen_width/2, 103/2);
     static import AOD;
+    background.Set_Image_Size(Vector(AOD.R_Window_Width(), 103));
+    background.Set_Visible(0);
+    background.Set_Position(AOD.R_Window_Width()/2, 103/2);
     AOD.Add(input);
     AOD.Add(input_after);
     AOD.Add(input_sig);
@@ -100,44 +168,5 @@ static:
       -- console_text.length;
     }
   }
-}
-
-bool console_open = 0;
-
-void Set_Open_Console_Key(SDL_Keycode k) {
-  ConsEng.key = k;
-}
-
-void Set_Console_History(int history_limit) {
-  ConsEng.console_history = history_limit;
-}
-
-void Set_Console_Output_Type(Type otype) {
-  ConsEng.console_type = otype;
-}
-
-private void Out ( string o ) {
-  ConsEng.to_console ~= o;
-}
-
-void Output(string ot) {
-  writeln(ot);
-  Out(ot);
-}
-
-void Debug_Output(string ot) {
-  writeln("AOD SAYS: " ~ ot);
-  if ( ConsEng.console_type == Type.Debug_In )
-    Out(ot);
-}
-
-void Initialize(bool print_debug, SDL_Keycode key, string cons) {
-  if ( print_debug )
-    ConsEng.console_type = Type.Debug_In;
-  else
-    ConsEng.console_type = Type.Debug_Out;
-  Debug_Output("Created new console");
-  ConsEng.key = key;
-  ConsEng.Construct();
 }
 

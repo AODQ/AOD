@@ -1,3 +1,4 @@
+/** Check AOD.d instead, this module is reserved for engine use only */
 module AODCore.realm;
 
 import derelict.opengl3.gl3;

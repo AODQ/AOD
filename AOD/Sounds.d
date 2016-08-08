@@ -1,3 +1,6 @@
+/**
+  -- still in development, check in later --
+*/
 module AODCore.sound;
 import derelict.openal.al;
 import derelict.vorbis.vorbis;

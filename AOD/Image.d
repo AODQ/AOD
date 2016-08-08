@@ -9,6 +9,9 @@ import AODCore.console;
 import AODCore.vector;
 
 // contains information of image
+/**
+  Contains information of an image
+*/
 struct SheetContainer {
 public:
   GLuint texture;
@@ -26,17 +29,24 @@ public:
   }
 }
 
-// A sheet container that will also contain location of obj inside a sheet,
-// pixel-based coordinates where origin is {0, 0}. Useful for spritesheets,
-// I'm sure there are some other utilities such as image cropping
+/**
+  A sheet container that will also contain location of obj inside a sheet,
+  pixel-based coordinates where origin is {0, 0}. Useful for spritesheets,
+  I'm sure there are some other utilities such as image cropping
+*/
 struct SheetRect {
 public:
-  GLuint texture;
-  int width, height;
+  public SheetContainer sc;
+  alias sc this;
   Vector ul, lr;
-  // Creates sheet rect whose image is sheet container, and coordinates
-  // are from upper-left (ul) to lower-right (lr), which are relative offsets
-  // from the origin {0, 0}
+  /**
+    Creates sheet rect
+    
+    Params:
+      sc = SheetContainer to use as image
+      ul_ = relative offset for the upper left coordinate from origin
+      lr_ = relative offset of the lower right coordinate from origin
+  */
   this(ref SheetContainer sc, ref Vector ul_, ref Vector lr_) {
     texture = sc.texture;
     width = sc.width;

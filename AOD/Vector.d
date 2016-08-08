@@ -1,5 +1,17 @@
+/**
+Macros:
+  PARAM = <u>$1</u>
+
+  PARAMDESC = <t style="padding-left:3em">$1</t>
+*/
 module AODCore.vector;
 
+/**
+  A two-dimensional vector capable of interacting with Matrix and
+  performing simple linear algebra functions
+
+  Only supports floats
+*/
 struct Vector {
 public:
   float x, y;
@@ -76,6 +88,11 @@ public:
     y /= rhs;
     return this;
   }
+  /**
+    Casts vector to string
+    Return:
+      A string with format: &lt;x, y&gt;
+  */
   string opCast(T)() if (is(T == string)) {
     import std.conv : to;
     return "< " ~ to!string(x) ~ ", " ~ to!string(y) ~ " >";
@@ -83,6 +100,9 @@ public:
 
   //                      utility methods
 
+  /**
+    Divides this vector by its Magnitude
+  */
   void Normalize() {
     float mag = Magnitude();
     if ( mag > 0 ) {
@@ -93,28 +113,50 @@ public:
 
   import std.math;
 
+  /**
+    Return:
+      Length between two vectors, using this vector as origin
+  */
   float Distance(Vector _vector) {
     return sqrt((x*x - _vector.x*_vector.x) + (y*y - _vector.y*_vector.y));
   }
 
+  /**
+    Return:
+      Relative angle from this vector and origin in radians
+  */
   float Angle() {
     return atan2(y, x);
   }
 
+  /**
+    Return:
+      Relative angle from this vector and _vector in radians
+  */
   float Angle(Vector _vector) {
     return atan2(_vector.y - y, _vector.x - x);
   }
 
+  /**
+    Return:
+      Distance of this vector from origin
+  */
   float Magnitude() {
     return sqrt((x*x) + (y*y));
   }
 
+  /**
+    Return:
+      Dot product of this and _vector (both components multiplied and summed)
+  */
   float Dot_Product(Vector _vector) {
     return x * _vector.x + y * _vector.y;
   }
 
 
-  // projects other vector onto this one
+  /**
+    Projects _vector onto this vector
+  */
   void Project(Vector _vector) {
     float dot_prod = Dot_Product(_vector);
     x = (dot_prod / (pow(_vector.x, 2 ) +
@@ -123,27 +165,40 @@ public:
                      pow(_vector.y, 2 )) ) * _vector.y;
   }
 
-  // gives right hand normal of vector
-  void Right_Normal(Vector vec) {
-  x =  (vec.x - x);
-  y = -(vec.y - y);
+  /**
+    Sets vector to be the right-hand normal of _vector
+  */
+  void Right_Normal(Vector _vector) {
+    x =  (_vector.x - x);
+    y = -(_vector.y - y);
   }
-  // gives left hand normal of vector
-  void Left_Normal(Vector vec) {
-  x = -(vec.x - x);
-  y =  (vec.y - y);
+  /**
+    Sets vector to be the right-hand normal of _vector
+  */
+  void Left_Normal(Vector _vector) {
+    x = -(_vector.x - x);
+    y =  (_vector.y - y);
   }
 
+  /**
+    Return:
+      Result of reflecting I onto N
+  */
   static Vector Reflect(Vector I, Vector N) {
     return I - (N*2.0f * I) * N;
   }
 
   import AODCore.matrix;
 
-  static Vector Transform(Matrix mat, Vector vec) {
+  /**
+    Multiplies _matrix to _vector
+    Return:
+      Transformed matrix
+  */
+  static Vector Transform(Matrix _matrix, Vector _vector) {
     Vector v;
-    v.x = vec.x * mat.a + vec.y * mat.c + mat.tx;
-    v.y = vec.x * mat.b + vec.y * mat.d + mat.ty;
+    v.x = _vector.x * _matrix.a + _vector.y * _matrix.c + _matrix.tx;
+    v.y = _vector.x * _matrix.b + _vector.y * _matrix.d + _matrix.ty;
     return v;
   }
 
