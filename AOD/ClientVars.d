@@ -5,12 +5,6 @@
   can do is completely up to the application writer. In the future audio and
   display settings will be stored here.
 */
-/**
-Macros:
-  PARAM = <u>$1</u>
-
-  PARAMDESC = <t style="padding-left:3em">$1</t>
-*/
 module AODCore.clientvars;
 import std.string;
 
@@ -18,7 +12,7 @@ import std.string;
 struct Keybind {
 public:
   /**A valid <a href="https://wiki.libsdl.org/SDL_Scancode">SDL_SCANCODE</a>
-         or AOD.Mouse_Bind*/
+         or AOD.Input.Mouse_Bind*/
   int key;
   /** A console command, in the majority of cases the user will probably expect
       the console command to occur when the 'key' is pressed */
@@ -34,6 +28,10 @@ public:
   if a key is pressed then the command will be executed.
 */
 Keybind[] keybinds;
+/**
+  Just stored commands. What you do with this is up to you.
+*/
+string[string] commands;
 
 import derelict.sdl2.sdl;
 
@@ -52,11 +50,31 @@ void Load_Config() {
       auto b = R_SDL_Scancode_Conv(item.key);
       if ( b !is null )
         keybinds ~= Keybind((*b), item.value);
-      import AODCore.console;
-      Debug_Output("Could not parse keybind '" ~ item.key ~ "'");
+      else {
+        import AODCore.console;
+        Debug_Output("Could not parse keybind '" ~ item.key ~ "'");
+      }
+    }
+  }
+  auto coms = "command" in ini_file;
+  if ( coms !is null ) {
+    foreach ( item; (*coms) ) {
+      commands[item.key] = item.value;
+      // -- DEBUG START
+      import std.stdio : writeln;
+      import std.conv : to;
+      writeln(item.key ~ " -- " ~ item.value);
+      // -- DEBUG END
     }
   }
   R_SDL_Scancode_Conv("", true); // destroy scancode map
+}
+
+/**
+  Saves the user config from keybinds and stores into "config.ini"
+*/
+void Save_Config() {
+  static import AOD;
 }
 
 import AODCore.input;
@@ -65,6 +83,9 @@ import AODCore.input;
 private auto R_SDL_Scancode_Conv(string x, bool erase = false,
                                            bool recon = false) {
   static int[immutable(string)] sdl_bind_conv;
+  if ( erase )
+    sdl_bind_conv.clear();
+  if ( recon ) {
     sdl_bind_conv.clear();
     sdl_bind_conv = [
       "mouseleft"               : Mouse_Bind.Left                 ,
@@ -291,7 +312,8 @@ private auto R_SDL_Scancode_Conv(string x, bool erase = false,
       "www"                     : SDL_SCANCODE_WWW                ,
       "x"                       : SDL_SCANCODE_X                  ,
       "y"                       : SDL_SCANCODE_Y                  ,
-      "z"                       : SDL_SCANCODE_Z                  
+      "z"                       : SDL_SCANCODE_Z
     ];
+  }
   return x in sdl_bind_conv;
 }

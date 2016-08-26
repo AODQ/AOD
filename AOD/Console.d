@@ -1,12 +1,6 @@
 /**
   Gives a form of communication between the user and the program.
 */
-/**
-Macros:
-  PARAM = <u>$1</u>
-
-  PARAMDESC = <t style="padding-left:3em">$1</t>
-*/
 module AODCore.console;
 import AODCore.text;
 import AODCore.entity;
@@ -22,8 +16,8 @@ import std.string;
     meaning that if you dislike the Console you do not need to
     use it)
 params:
-  console_type = $(PARAMDESC Sets the console_type (see Type))
-  key          = $(PARAMDESC Sets key for which console will open to)
+  console_type = Sets the console_type (see Type)
+  key          = Sets key for which console will open to
 */
 void Initialize(Type console_type, SDL_Keycode key = SDL_SCANCODE_GRAVE) {
   ConsEng.console_type = console_type;
@@ -34,7 +28,7 @@ void Initialize(Type console_type, SDL_Keycode key = SDL_SCANCODE_GRAVE) {
 
 /** Outputs a message to the console
 Params:
-  msg = $(PARAMDESC A message that has no new lines)
+  msg = A message that has no new lines
 */
 void Output(string msg) {
   writeln(msg);
@@ -103,15 +97,16 @@ static:
     input_after = new Text(10, 100, "");
     input_sig   = new Text(0, 100, ">>");
     input_sig.Set_Visible(0);
-    cursor = new Entity(50);
+    cursor = new Entity(0);
     cursor.Set_Image_Size(Vector(1, 10));
     cursor.Set_Visible(0);
     cursor.Set_Position(13, 96);
-    background = new Entity(50);
+    background = new Entity(0);
     static import AOD;
     background.Set_Image_Size(Vector(AOD.R_Window_Width(), 103));
     background.Set_Visible(0);
     background.Set_Position(AOD.R_Window_Width()/2, 103/2);
+    background.Set_Colour(0.3, 0.3, 0.2);
     AOD.Add(input);
     AOD.Add(input_after);
     AOD.Add(input_sig);

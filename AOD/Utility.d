@@ -2,44 +2,62 @@
   Just general utility that is useful in AOD. Was much more useful in C++, now
   in D most of these are not necessary
 */
-/**
-Macros:
-  PARAM = <u>$1</u>
-
-  PARAMDESC = <t style="padding-left:3em">$1</t>
-*/
 module AODCore.utility;
 import std.string;
 
 /** */
-const(float) E         =  2.718282,
+const(float) E         =  2.718282f,
 /** */
-             Log10E    =  0.4342945,
+             Log10E    =  0.4342945f,
 /** */
-             Log2E     =  1.442695,
+             Log2E     =  1.442695f,
 /** */
-             Pi        =  3.141593,
+             Pi        =  3.141593f,
 /** */
-             Tau       =  6.283185,
-/** */
+             Tau       =  6.283185f,
+/** use float.max instead */
              Max_float =  3.402823E+38,
-/** */
+/** use float.min instead */
              Min_float = -3.402823E+38,
 /** */
-             Epsilon   =  0.000001;
+             Epsilon   =  0.000001f;
 
 import std.random;
-private Random gen;
+private Mt19937 gen;
+
+void Seed_Random() {
+  import std.algorithm.iteration : map;
+  import std.range : repeat;
+  gen.seed(map!((a) => unpredictableSeed)(repeat(0)));
+}
 
 /** Returns: A random float bot .. top*/
 float R_Rand(float bot, float top) {
   return uniform(bot, top, gen);
 }
 
+/** */
+enum Direction {
+  NW,  N, NE,
+   W,      E,
+  SW,  S, SE
+};
+
 /** Returns: Max value between the two parameters */
 T R_Max(T)(T x, T y) { return x > y ? x : y; }
 /** Returns: Min value between the two parameters */
 T R_Min(T)(T x, T y) { return x < y ? x : y; }
+
+/** Returns array with indexed element removed */
+T Remove(T)(T array, int index) in {
+  assert(index >= 0 && index < array.length);
+} body {
+  if ( array.length-1 == index ) return array[0 .. index];
+  else {
+    return array[0 .. index] ~
+           array[index .. $];
+  }
+}
 
 import AODCore.vector;
 
@@ -67,8 +85,6 @@ struct INI_Item {
   }
 }
 
-// Hashmap representing categories, each category contains an array of INI_Item
-// example: data["keybinds"].key
 /** Hashmap representing categories. Each category contains an array of INI_Item
 Example:
 ---
@@ -97,8 +113,13 @@ INI_Data Load_INI(string filename) in {
     string current_line = fil.readln().strip();
     if ( current_line    == ""  ) continue; // empty line
     if ( current_line[0] == ';' ) continue; // comment
-    if ( current_line[0] == ';' && current_line[$] == ']' ) { // section
+    if ( current_line[0] == '[' && current_line[$-1] == ']' ) { // section
       current_section = current_line[1 .. $-1].strip();
+      /// ----- debug ----
+      import std.stdio : writeln;
+      import std.conv : to;
+      writeln("CURRENT SECTION: " ~ to!string(current_section));
+      /// ----- debug ----
       continue;
     }
     // regular item assignment

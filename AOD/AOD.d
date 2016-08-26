@@ -26,32 +26,26 @@ void Init () {
 }
 ---
 */
-/**
-Macros:
-  PARAM = <u>$1</u>
-
-  PARAMDESC = <t style="padding-left:3em">$1</t>
-*/
 module AOD;
 
-
-
-import derelict.opengl3.gl3;
 import derelict.opengl3.gl;
+import derelict.opengl3.gl3;
 import derelict.sdl2.sdl;
-import std.string;
 import std.stdio;
+import std.string;
 
+static import AODCore.camera;
 static import AODCore.camera;
 static import AODCore.clientvars;
-static import AODCore.realm;
-static import AODCore.text;
-static import AODCore.sound;
 static import AODCore.entity;
-static import AODCore.vector;
-static import AODCore.utility;
 static import AODCore.matrix;
-static import AODCore.camera;
+static import AODCore.realm;
+static import AODCore.render_base;
+static import AODCore.shader;
+static import AODCore.sound;
+static import AODCore.text;
+static import AODCore.utility;
+static import AODCore.vector;
 
 // --------------------- realm -------------------------------------------------
 
@@ -59,11 +53,11 @@ private AODCore.realm.Realm realm = null;
 
 /** Initializes the engine
   Params:
-    msdt   = $(PARAMDESC Amount of milliseconds between each update frame call)
-    name   = $(PARAMDESC Name of the application (for the window title))
-    width  = $(PARAMDESC Window X dimension)
-    height = $(PARAMDESC Window Y dimension)
-    ico    = $(PARAMDESC File location of the icon to use for the application)
+    msdt   = Amount of milliseconds between each update frame call
+    name   = Name of the application (for the window title)
+    width  = Window X dimension
+    height = Window Y dimension
+    ico    = File location of the icon to use for the application
 */
 void Initialize(uint msdt, string name, int width, int height, string ico = "")
 in {
@@ -81,27 +75,31 @@ void Change_MSDT(Uint32 ms_dt) in { assert(realm !is null); } body {
 @disable void Reset() in { assert(realm  is null); } body { /* ... todo ... */ }
 /** Ends the engine and deallocates all resources */
 void End()   in { assert(realm !is null); } body {
-  destroy(realm);
+  realm.End();
   realm = null;
 }
 
-/** Adds entity to the engine to be updated and rendered */
-int  Add(Entity o)    in {assert(realm !is null);} body { return realm.Add(o); }
-/** Adds text to the engine to be updated and rendered */
-void Add(Text t)      in {assert(realm !is null);} body {        realm.Add(t); } 
-/** Removes the entity from the engine and deallocates it */
-void Remove(Entity o) in {assert(realm !is null);} body {     realm.Remove(o); }
-/** Removes the text from the engine and deallocates it */
-void Remove(Text t)   in {assert(realm !is null);} body {     realm.Remove(t); }
-
+/** Adds rbase to the engine to be updated and rendered */
+int  Add   (AODCore.render_base.Render_Base o) in {assert(realm !is null);}
+body { return realm.Add(o);    }
+/** Removes rbase from the engine and deallocates it */
+void Remove(AODCore.render_base.Render_Base o) in {assert(realm !is null);}
+body {        realm.Remove(o); }
+/** Removes entities and playing sounds (not loaded sounds or images)
+Params:
+  rendereable = Adds a rendereable after cleanup is done (cleanup doesn't take
+                 place until after the frame is finished)
+*/
+void Clean_Up(AODCore.render_base.Render_Base rendereable = null) in {
+  assert(realm !is null);
+} body { realm.Clean_Up(rendereable); }
 /** Sets the background colour when rendering
   Params:
-    r = $(PARAMDESC Red)
-    g = $(PARAMDESC Green)
-    b = $(PARAMDESC Blue)
+    r = Red
+    g = Green
+    b = Blue
 */
-void Set_BG_Colour(GLfloat r, GLfloat g, GLfloat b)
-in {
+void Set_BG_Colour(GLfloat r, GLfloat g, GLfloat b) in {
   assert(realm !is null);
 } body {
   realm.Set_BG_Colours(r, g, b);
@@ -109,14 +107,18 @@ in {
 
 /** Runs the engine (won't return until SDL_Quit is called) */
 void Run() in { assert(realm !is null); } body {
+  // do splash screen
+  /* import AODCore.Splashscreen; */
+  /* AOD.Add(new Splash); */
+  // now run
   realm.Run();
 }
 
 /** Returns the current MS per frame */
 float R_MS()         { return realm.R_MS();   }
 /** Calculates the minimal amount of frames required for the duration to occur
-  Params: 
-    x = $(PARAMDESC duration)
+  Params:
+    x = duration
 */
 float To_MS(float x) { return realm.To_MS(x); }
 
@@ -131,17 +133,26 @@ int R_Window_Width()  { return realm.R_Width();  }
 */
 int R_Window_Height() { return realm.R_Height(); }
 
+// --------------------- Menu --------------------------------------------------
+/** */
+alias Menu = AODCore.menu.Menu;
 // --------------------- Vector/Matrix/Utility ---------------------------------
 
+/** */
 alias Vector = AODCore.vector.Vector;
+/** */
 alias Matrix = AODCore.matrix.Matrix;
 
+/** Bindings to the AODCore.Utility module */
 class Util {
 public: static:
+  /** */
   alias R_Rand = AODCore.utility.R_Rand;
   alias R_Max  = AODCore.utility.R_Max;
   alias R_Min  = AODCore.utility.R_Min;
+  /** */
   alias To_Rad = AODCore.utility.To_Rad;
+  /** */
   alias To_Deg = AODCore.utility.To_Deg;
 
   alias E         = AODCore.utility.E;
@@ -153,79 +164,151 @@ public: static:
   alias Min_float = AODCore.utility.Min_float;
   alias Epsilon   = AODCore.utility.Epsilon;
 
+  alias Remove    = AODCore.utility.Remove;
+
+  /** */
   alias Load_INI  = AODCore.utility.Load_INI;
+  /** */
   alias INI_Data  = AODCore.utility.INI_Data;
 }
 
+alias Direction = AODCore.utility.Direction;
+
+// --------------------- Entity ------------------------------------------------
+
+  /** */
+alias Entity     = AODCore.entity.Entity;
+  /** */
+alias PolyEntity = AODCore.entity.PolyEnt;
+  /** */
+alias AABBEntity = AODCore.entity.AABBEnt;
+
+// --------------------- Text --------------------------------------------------
+
+/** */
+alias Text = AODCore.text.Text;
+
+// --------------------- Image -------------------------------------------------
+
+  /** */
+alias SheetContainer   = AODCore.image.SheetContainer;
+  /** */
+alias SheetRect        = AODCore.image.SheetRect;
+  /** */
+alias Load_Image       = AODCore.image.Load_Image;
+
+// --------------------- Animation ---------------------------------------------
+
+  /** */
+alias Animation        = AODCore.animation.Animation;
+  /** */
+alias Animation_Player = AODCore.animation.Animation_Player;
+
+// --------------------- Shader ------------------------------------------------
+
+ /** */
+alias Shader = AODCore.shader.Shader;
+
 // --------------------- Camera ------------------------------------------------
 
+  /** */
 class Camera {
 public: static:
+  /** */
   alias Set_Position    = AODCore.camera.Set_Position;
+  /** */
   alias Set_Size        = AODCore.camera.Set_Size;
+  /** */
   alias R_Size          = AODCore.camera.R_Size;
+  /** */
   alias R_Position      = AODCore.camera.R_Position;
+  /** */
   alias R_Origin_Offset = AODCore.camera.R_Origin_Offset;
 }
 
 // --------------------- ClientVars --------------------------------------------
 
+  /** */
 class ClientVars {
 public: static:
+  /** */
   alias Keybind       = AODCore.clientvars.Keybind;
+  /** */
+  alias keybinds      = AODCore.clientvars.keybinds;
+  /** */
+  alias commands      = AODCore.clientvars.commands;
+  /** */
   alias Load_Config   = AODCore.clientvars.Load_Config;
 }
 
 // --------------------- Console -----------------------------------------------
 
+  /** */
 class Console {
 public: static:
+  /** */
   alias Type                    = AODCore.console.Type;
+  /** */
   alias console_open            = AODCore.console.console_open;
+  /** */
   alias Set_Open_Console_Key    = AODCore.console.Set_Open_Console_Key;
+  /** */
   alias Set_Console_History     = AODCore.console.Set_Console_History;
+  /** */
   alias Set_Console_Output_Type = AODCore.console.Set_Console_Output_Type;
+  /** */
   alias Initialize              = AODCore.console.Initialize;
 }
+  /** */
 alias Output = AODCore.console.Output;
 
-// --------------------- Entity ------------------------------------------------
-
-alias Entity     = AODCore.entity.Entity;
-alias PolyEntity = AODCore.entity.PolyEnt;
-alias AABBEntity = AODCore.entity.AABBEnt;
-
-// --------------------- Image -------------------------------------------------
-
-alias SheetContainer = AODCore.image.SheetContainer;
-alias SheetRect      = AODCore.image.SheetRect;
-alias Load_Image     = AODCore.image.Load_Image;
 
 // --------------------- Input -------------------------------------------------
 
-class Inp {
-  alias Mouse_Bind = AODCore.input.Mouse_Bind;
-  alias keystate   = AODCore.input.keystate;
-  alias R_LMB      = AODCore.input.R_LMB;
-  alias R_RMB      = AODCore.input.R_RMB;
-  alias R_MMB      = AODCore.input.R_MMB;
-  alias R_MX1      = AODCore.input.R_MX1;
-  alias R_MX2      = AODCore.input.R_MX2;
-  alias R_Mouse_X  = AODCore.input.R_Mouse_X;
-  alias R_Mouse_Y  = AODCore.input.R_Mouse_Y;
+  /** */
+class Input {
+  /** */
+  alias Mouse_Bind         = AODCore.input.Mouse_Bind;
+  /** */
+  alias keystate           = AODCore.input.keystate;
+  /** */
+  alias R_LMB              = AODCore.input.R_LMB;
+  /** */
+  alias R_RMB              = AODCore.input.R_RMB;
+  /** */
+  alias R_MMB              = AODCore.input.R_MMB;
+  /** */
+  alias R_MX1              = AODCore.input.R_MX1;
+  /** */
+  alias R_MX2              = AODCore.input.R_MX2;
+  /** */
+  alias R_On_LMB           = AODCore.input.R_On_LMB;
+  /** */
+  alias R_On_RMB           = AODCore.input.R_On_RMB;
+  /** */
+  alias R_On_MMB           = AODCore.input.R_On_MMB;
+  /** */
+  alias R_On_MX1           = AODCore.input.R_On_MX1;
+  /** */
+  alias R_On_MX2           = AODCore.input.R_On_MX2;
+  /** */
+  alias R_Mouse_X          = AODCore.input.R_Mouse_X;
+  /** */
+  alias R_Mouse_Y          = AODCore.input.R_Mouse_Y;
+  /** */
+  alias Key_To_String = AODCore.input.Key_To_String;
 }
 
 // --------------------- Sound -------------------------------------------------
 
-alias Play_Sample = AODCore.sound.Sounds.Play_Sample;
+alias Load_Sound = AODCore.sound.Sound.Load_Sound;
+alias Play_Sound = AODCore.sound.Sound.Play_Sound;
+alias Stop_Sound = AODCore.sound.Sound.Stop_Sound;
 class Sound {
-  alias Change_Sample_Position = AODCore.sound.Sounds.Change_Sample_Position;
-  alias Clean_Up               = AODCore.sound.Sounds.Clean_Up;
+  alias Change_Sample_Position = AODCore.sound.Sound.Change_Sound_Position;
+  alias Clean_Up               = AODCore.sound.Sound.Clean_Up;
 }
 
-// --------------------- Text --------------------------------------------------
-
-alias Text = AODCore.text.Text;
 
 // ------------------- misc functions ------------------------------------------
 // these functions are required to be put down here so that the documentation
@@ -234,8 +317,8 @@ alias Text = AODCore.text.Text;
 
 /** Sets current FPS Display text and adds it to the engine
   Params:
-    fps_text = $(PARAMDESC A text that the engine will use to calculate the FPS.
-               You have to manually set the position and font yourself)
+    fps_text = A text that the engine will use to calculate the FPS.
+               You have to manually set the position and font yourself
 */
 void Set_FPS_Display(AOD.Text fps_text) in { assert(realm !is null); }
 body { realm.Set_FPS_Display(fps_text);}

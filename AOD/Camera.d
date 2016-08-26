@@ -10,15 +10,7 @@ Example:
 ---
 */
 
-/**
-Macros:
-  PARAM = <u>$1</u>
-
-  PARAMDESC = <t style="padding-left:3em">$1</t>
-*/
 module AODCore.camera;
-
-
 import AODCore.vector;
 
 private Vector position;
@@ -27,7 +19,7 @@ private Vector size;
 /**
   Sets the position of the camera
   Params:
-    pos = $(PARAMDESC position of the camera relative to origin (0, 0))
+    pos = position of the camera relative to origin (0, 0)
 */
 void Set_Position(Vector pos) {
   position = pos;
@@ -36,8 +28,8 @@ void Set_Position(Vector pos) {
 /**
   Sets the position of the camera
   Params:
-    x = $(PARAMDESC position of the camera on the x-axis relative to origin)
-    x = $(PARAMDESC position of the camera on the y-axis relative to origin)
+    x = position of the camera on the x-axis relative to origin
+    x = position of the camera on the y-axis relative to origin
 */
 void Set_Position(float x, float y) {
   position = Vector(x, y);
@@ -46,7 +38,7 @@ void Set_Position(float x, float y) {
 /**
   Sets the size of the camera ( the screen renders )
   Params:
-    siz = $(PARAMDESC dimension of the camera in pixels)
+    siz = dimension of the camera in pixels
 */
 void Set_Size(Vector siz) {
   if ( siz.x <= 0 || siz.y <= 0 ) return;
@@ -56,8 +48,8 @@ void Set_Size(Vector siz) {
 /**
   Sets the size of the camera
   Params:
-    x = $(PARAMDESC dimension of the camera on the x-axis in pixels)
-    y = $(PARAMDESC dimension of the camera on the y-axis in pixels)
+    x = dimension of the camera on the x-axis in pixels
+    y = dimension of the camera on the y-axis in pixels
 */
 void Set_Size(float x, float y) {
   if ( x <= 0 || y <= 0 ) return;

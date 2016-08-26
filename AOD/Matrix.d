@@ -1,9 +1,3 @@
-/**
-Macros:
-  PARAM = <u>$1</u>
-
-  PARAMDESC = <t style="padding-left:3em">$1</t>
-*/
 module AODCore.matrix;
 import AODCore.vector;
 
@@ -21,12 +15,12 @@ public:
     Constructs a new matrix based off the parameters (if you do not know
        what params to supply use `Matrix.New()` instead)
     Params:
-      _a  = $(PARAMDESC (0, 0))
-      _b  = $(PARAMDESC (0, 1))
-      _c  = $(PARAMDESC (1, 0))
-      _d  = $(PARAMDESC (1, 1))
-      _tx = $(PARAMDESC translation x)
-      _ty = $(PARAMDESC translation y)
+      _a  = (0, 0)
+      _b  = (0, 1)
+      _c  = (1, 0)
+      _d  = (1, 1)
+      _tx = translation x
+      _ty = translation y
   */
   this(float _a, float _b, float _c,
        float _d, float _tx, float _ty) {
@@ -57,7 +51,7 @@ public:
   /**
     Translates the matrix relative to the current position
     Params:
-      vec = $(PARAMDESC Vector to translate relative to the current position)
+      vec = Vector to translate relative to the current position
   */
   void Translate(inout(Vector) vec) {
     tx += vec.x;
@@ -67,10 +61,8 @@ public:
   /**
     Translates the matrix relative to the current position
     Params:
-      x = $(PARAMDESC Value to translate on the x-axis relative to the current
-            position)
-      y = $(PARAMDESC Value to translate on the y-axis relative to the current
-            position)
+      x = Value to translate on the x-axis relative to the current position
+      y = Value to translate on the y-axis relative to the current position
   */
   void Translate(float x, float y) {
     tx += x;
@@ -80,7 +72,7 @@ public:
   /**
     Translates the matrix relative to the origin (0, 0)
     Params:
-      vec = $(PARAMDESC Vector to translate relative to origin)
+      vec = Vector to translate relative to origin
   */
   void Set_Translation(inout(Vector) vec) {
     tx = vec.x;
@@ -90,8 +82,8 @@ public:
   /**
     Translates the matrix relative to the origin (0, 0)
     Params:
-      x = $(PARAMDESC Value to translate on the x-axis relative to origin)
-      y = $(PARAMDESC Value to translate on the y-axis relative to origin)
+      x = Value to translate on the x-axis relative to origin
+      y = Value to translate on the y-axis relative to origin
   */
   void Set_Translation(float x, float y) {
     tx = x;
@@ -101,9 +93,9 @@ public:
   /**
     Composes the matrix with a new translation, rotation and scale
     Params:
-      pos = $(PARAMDESC vector to set translation of matrix)
-      rot = $(PARAMDESC Angle to rotate matrix (in radians))
-      scale = $(PARAMDESC vector to set scale of matrix; (1, 1) is default)
+      pos = vector to set translation of matrix
+      rot = Angle to rotate matrix (in radians)
+      scale = vector to set scale of matrix; (1, 1) is default
   */
   void Compose(inout(Vector) pos, float rot,
                      Vector scale) {
@@ -117,7 +109,7 @@ public:
   /**
     Rotates the matrix
     Params:
-      rot = $(PARAMDESC Angle to rotate matrix (in radians))
+      rot = Angle to rotate matrix (in radians)
   */
   void Rotate(float rot) {
     import std.math;
@@ -140,7 +132,7 @@ public:
   /**
     Scales the matrix
     Params:
-      sc = $(PARAMDESC vector to set scale of matrix; (1, 1) is default)
+      sc = vector to set scale of matrix; (1, 1) is default
   */
   void Scale(Vector sc) {
     a *= sc.x;

@@ -1,3 +1,9 @@
+/**
+  Contains basic image handling that the entirety of AOD uses. From here you
+  can either load an image or pass a loaded image, referred to as either
+  a SheetContainer or SheetRect, to various functions. Another way to look at
+  these two image containers is as a spritesheet and individual sprite.
+*/
 module AODCore.image;
 
 import derelict.opengl3.gl3;
@@ -8,53 +14,74 @@ import derelict.devil.ilu;
 import AODCore.console;
 import AODCore.vector;
 
-// contains information of image
 /**
-  Contains information of an image
+  Contains basic information of an image.
 */
 struct SheetContainer {
 public:
+  /** */
   GLuint texture;
-  int width, height;
+  /** */
+  int width,
+  /** */
+      height;
+  /** */
   this(GLuint t, int w, int h) {
     texture = t;
     width = w;
     height = h;
   }
-  this(char* filename) {
+  /** */
+  this(string filename) {
     auto z = Load_Image(filename);
     texture = z.texture;
     width = z.width;
     height = z.height;
   }
+  /** Casts the sheetcontainer to a sheetrect (of the entire image) */
+  T opCast(T)() if (is(T == SheetRect)) {
+    import AOD : Vector;
+    return SheetRect(this, Vector(0.0f, 0.0f), Vector(cast(float)width,
+                                                      cast(float)height));
+  }
 }
 
 /**
-  A sheet container that will also contain location of obj inside a sheet,
-  pixel-based coordinates where origin is {0, 0}. Useful for spritesheets,
-  I'm sure there are some other utilities such as image cropping
+  A sheetcontainer that contains the coordinates of a subsection of the image.
+  Useful for spritesheets, image cropping, etc.
 */
 struct SheetRect {
 public:
-  public SheetContainer sc;
+  SheetContainer sc;
   alias sc this;
-  Vector ul, lr;
+  /** */
+  Vector ul,
+  /** */
+         lr;
   /**
     Creates sheet rect
-    
+
     Params:
       sc = SheetContainer to use as image
-      ul_ = relative offset for the upper left coordinate from origin
-      lr_ = relative offset of the lower right coordinate from origin
+      _ul = relative offset for the upper left coordinate from origin {0, 0}
+      _lr = relative offset of the lower right coordinate from origin {0, 0}
   */
-  this(ref SheetContainer sc, ref Vector ul_, ref Vector lr_) {
+  this(SheetContainer sc, Vector _ul, Vector _lr) {
+    ul = _ul;
+    lr = _lr;
+    import std.math;
+    width   = cast(int)abs(ul.x - lr.x);
+    height  = cast(int)abs(ul.y - lr.y);
     texture = sc.texture;
-    width = sc.width;
-    height = sc.height;
-    ul = ul_;
-    lr = lr_;
+    ul.x /= sc.width; lr.y /= sc.height;
+    lr.x /= sc.width; ul.y /= sc.height;
+    import std.stdio;
+    float ty = lr.y;
+    lr.y = 1 - ul.y;
+    ul.y = 1 - ty;
   }
 }
+
 
 import std.string;
 SheetContainer Load_Image(const char* fil) {
@@ -90,7 +117,7 @@ SheetContainer Load_Image(const char* fil) {
     // set texture interpolation method
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-      
+
     width  = ilGetInteger(IL_IMAGE_WIDTH);
     height = ilGetInteger(IL_IMAGE_HEIGHT);
 

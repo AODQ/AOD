@@ -1,53 +1,69 @@
 /** Check AOD.d instead, this module is reserved for engine use only */
 module AODCore.realm;
 
-import derelict.opengl3.gl3;
-import derelict.opengl3.gl;
-import derelict.openal.al;
-import derelict.vorbis.vorbis;
-import derelict.vorbis.file;
-import derelict.sdl2.sdl;
+import AODCore.console;
+import AODCore.entity;
+import AODCore.input;
+import AODCore.sound;
+import AODCore.text;
+import Camera = AODCore.camera;
 import derelict.devil.il;
 import derelict.devil.ilu;
 import derelict.devil.ilut;
 import derelict.freetype.ft;
-import AODCore.entity;
-import AODCore.text;
-import AODCore.console;
-import AODCore.input;
-import AODCore.sound;
-import Camera = AODCore.camera;
+import derelict.openal.al;
+import derelict.opengl3.gl;
+import derelict.opengl3.gl3;
+import derelict.sdl2.sdl;
+import derelict.vorbis.file;
+import derelict.vorbis.vorbis;
+import AODCore.render_base;
 
+/** */
 private SDL_Window* screen = null;
 
+/** */
 class Realm {
-  Entity[][] objects;
-  Text[] text;
+/** objects in realm, index [layer][it]*/
+  Render_Base[][] objects;
+/** objects to remove at end of each frame */
+  Render_Base[] objs_to_rem;
+  bool cleanup_this_frame;
+  Render_Base add_after_cleanup;
 
-  Entity[] objs_to_rem;
-
+/** colour to clear buffer with */
   GLfloat bg_red, bg_blue, bg_green;
 
+/** if the realm run loop has started yet */
   bool started;
-  uint start_ticks;
-
+/** */
+  bool ended;
+/** width/height of window */
   int width, height;
+/** delta time (in milliseconds) for a frame */
   uint ms_dt;
+/** calculates frames per second */
   float[20] fps = [ 0 ];
+/** Outputs frames_per_second to screen */
   AODCore.text.Text fps_display;
 public:
-
+/** */
   void Change_MSDT(uint ms_dt_) in {
     assert(ms_dt_ > 0);
   } body {
     ms_dt = ms_dt_;
   }
 
+/** */
   int R_Width ()       { return width;                        }
+/** */
   int R_Height()       { return height;                       }
+/** */
   float R_MS  ()       { return cast(float)ms_dt;             }
+/** */
   float To_MS(float x) { return cast(float)(x*ms_dt)/1000.0f; }
 
+/** */
   void Set_FPS_Display(AODCore.text.Text fps) {
     if ( fps_display !is null )
       Remove(fps_display);
@@ -56,13 +72,24 @@ public:
       Add(fps_display);
   }
 
+/** */
   this(int window_width, int window_height, uint ms_dt_,
        immutable(char)* window_name, immutable(char)* icon = "") {
+    static import AODCore.utility;
+    AODCore.utility.Seed_Random();
+    // -- DEBUG START
+    import std.stdio : writeln;
+    import std.conv : to;
+    writeln("S: " ~ to!string(AODCore.utility.R_Rand(0.0f, 100.0f)));
+    writeln("S: " ~ to!string(AODCore.utility.R_Rand(0.0f, 100.0f)));
+    writeln("S: " ~ to!string(AODCore.utility.R_Rand(0.0f, 100.0f)));
+    // -- DEBUG END
     width  = window_width;
     height = window_height;
+    ended = 0;
     ms_dt = ms_dt_;
     Debug_Output("Initializing SDL");
-    import std.conv : to; 
+    import std.conv : to;
     import derelict.util.exception;
     import std.stdio;
     writeln("AOD@Realm.d@Initialize Initializing Art of Dwarficorn engine");
@@ -76,19 +103,29 @@ public:
             "writeln(\"Failed to load: " ~ lib ~ ", \" ~ to!string(de));"     ~
         "}";
     }
-    
+
     mixin(Load_Library!("DerelictGL3"       ,""));
     mixin(Load_Library!("DerelictGL"        ,""));
-    mixin(Load_Library!("DerelictSDL2",
-                        "\"SDL2.dll\",SharedLibVersion(2 ,0 ,2)"));
+    version(linux) {
+      mixin(Load_Library!("DerelictSDL2", "SharedLibVersion(2, 0, 2)"));
+    } else {
+      mixin(Load_Library!("DerelictSDL2",
+                          "\"SDL2.dll\",SharedLibVersion(2 ,0 ,2)"));
+    }
     mixin(Load_Library!("DerelictIL"        ,""));
     mixin(Load_Library!("DerelictILU"       ,""));
     mixin(Load_Library!("DerelictILUT"      ,""));
-    mixin(Load_Library!("DerelictFT"        ,"\"freetype265.dll\""));
     mixin(Load_Library!("DerelictAL"        ,""));
-    mixin(Load_Library!("DerelictVorbis"    ,"\"libvorbis-0.dll\""));
-    mixin(Load_Library!("DerelictVorbisFile","\"libvorbisfile-3.dll\""));
-    
+    version (linux) {
+      mixin(Load_Library!("DerelictFT"        , ""));
+      mixin(Load_Library!("DerelictVorbis"    , ""));
+      mixin(Load_Library!("DerelictVorbisFile", ""));
+    } else {
+      mixin(Load_Library!("DerelictFT"        ,"\"freetype265.dll\""));
+      mixin(Load_Library!("DerelictVorbis"    ,"\"libvorbis-0.dll\""));
+      mixin(Load_Library!("DerelictVorbisFile","\"libvorbisfile-3.dll\""));
+    }
+
     writeln("AOD@Realm.d@Initialize Initializing SDL");
     SDL_Init ( SDL_INIT_EVERYTHING );
 
@@ -96,12 +133,13 @@ public:
     writeln("AOD@Realm.d@Initialize Creating SDL Window");
     screen = SDL_CreateWindow(window_name, SDL_WINDOWPOS_UNDEFINED,
                                            SDL_WINDOWPOS_UNDEFINED,
-                                           window_width, window_height,
+                                           window_width,
+                                           window_height,
                                            SDL_WINDOW_OPENGL |
                                            SDL_WINDOW_SHOWN );
-    writeln("Creating OpenGL Context");
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+    writeln("AOD@Realm.d@Creating OpenGL Context");
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,  24);
     SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE,   8);
@@ -115,6 +153,8 @@ public:
       throw new Exception("Error SDL_GL_CreateContext: "
                           ~ to!string(SDL_GetError()));
     }
+    writeln("AOD@Realm.d@OpenGL version: " ~
+             to!string(glGetString(GL_VERSION)));
 
     try {
       DerelictGL3.reload();
@@ -126,17 +166,20 @@ public:
     }
 
     glEnable(GL_TEXTURE_2D);
-    glEnable(GL_BLEND);
+    /* glEnable(GL_BLEND); */
     if ( icon != "" ) {
-      writeln("Loading window icon");
+      writeln("AOD@Realm.d@Loading window icon");
       SDL_Surface* ico = SDL_LoadBMP(icon);
+      if ( ico == null ) {
+        writeln("AOD@Realm.d@Error loading icon BMP");
+      }
       SDL_SetWindowIcon(screen, ico);
     }
 
     glClearDepth(1.0f);
     glPolygonMode(GL_FRONT, GL_FILL);
     glShadeModel(GL_FLAT);
-    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
+    /* glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST); */
     glDepthFunc(GL_LEQUAL);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
@@ -145,7 +188,6 @@ public:
     glMatrixMode(GL_PROJECTION);
     glEnable(GL_ALPHA);
 
-    writeln("glLoadIdentity");
     glLoadIdentity();
 
     ilInit();
@@ -154,18 +196,19 @@ public:
     if ( !ilutRenderer(ILUT_OPENGL) )
       writeln("Error setting ilut Renderer to ILUT_OPENGL");
     import AODCore.vector;
-    writeln("window dimensions: " ~ cast(string)Vector(window_width,
+    writeln("AOD@Realm.d@window dimensions: " ~ cast(string)Vector(window_width,
                                                        window_height));
-    
+
     glOrtho(0, window_width, window_height, 0, 0, 1);
+    glViewport(0, 0, window_width, window_height);
 
     glDisable(GL_DEPTH_TEST);
     glMatrixMode(GL_MODELVIEW);
     { // others
-      writeln("Initializing sounds core");
-      Debug_Output("Initializing Sounds Core");
+      writeln("AOD@Realm.d@Initializing sounds core");
+      writeln("Initializing Sounds Core");
       SoundEng.Set_Up();
-      Debug_Output("Initializing Font Core");
+      writeln("Initializing Font Core");
       TextEng.Font.Init();
       /* objs_to_rem = []; */
       /* bg_red   = 0; */
@@ -179,7 +222,8 @@ public:
     writeln("AOD@Realm.d@Initialize Finalized initializing AOD main core");
   }
 
-  int Add(Entity o) in {
+/** */
+  int Add(Render_Base o) in {
     assert(o !is null);
   } body {
     static uint id_count = 0;
@@ -187,47 +231,41 @@ public:
     int l = o.R_Layer();
     if ( objects.length <= l ) objects.length = l+1;
     objects[l] ~= o;
-    return o.Ret_ID();
+    o.Added_To_Realm();
+    return o.R_ID();
   }
-
-  void Add(Text t) in {
-    assert(t !is null);
-  } body {
-    text ~= t;
+/** */
+  void End() {
+    Clean_Up(null);
+    import AODCore.sound;
+    Sound.End();
+    ended = true;
   }
-
-  void Remove(Entity o) in {
+/** */
+  void Remove(Render_Base o) in {
     assert(o !is null);
   } body {
     objs_to_rem ~= o;
   }
-  void Remove(Text t) in {
-    assert(t !is null);
-  } body {
-    foreach ( i; 0 .. text.length ) {
-      if ( text[i] == t ) {
-        destroy(text[i]);
-        text[i] = null;
-        text = text[0 .. i] ~ text[i+1 .. $];
-        return;
-      }
-    }
+/**  */
+  void Clean_Up(Render_Base rendereable) {
+    cleanup_this_frame = true;
+    add_after_cleanup  = rendereable;
   }
-
+/** */
   void Set_BG_Colours(GLfloat r, GLfloat g, GLfloat b) {
     bg_red = r;
     bg_green = g;
     bg_blue = g;
   }
 
-
+/** */
   void Run() {
     float prev_dt        = 0, // DT from previous frame
           curr_dt        = 0, // DT for beginning of current frame
-          elapsed_dt     = 0, // DT elapsed between previous frame and this frame
+          elapsed_dt     = 0, // DT elapsed between previous and this frame
           accumulated_dt = 0; // DT needing to be processed
     started = 1;
-    start_ticks = SDL_GetTicks();
     SDL_Event _event;
     _event.user.code = 2;
     _event.user.data1 = null;
@@ -244,7 +282,9 @@ public:
     while ( SDL_PollEvent(&_event) ) {
       switch ( _event.type ) {
         case SDL_QUIT:
-          return;
+          if ( !ended )
+            End();
+        break;
         default: break;
       }
     }
@@ -265,6 +305,7 @@ public:
         // actual update
         accumulated_dt -= ms_dt;
         Update();
+        if ( ended ) break;
 
         string tex;
         string to_handle;
@@ -278,9 +319,16 @@ public:
           switch ( _event.type ) {
             default: break;
             case SDL_QUIT:
-              return;
+              if ( !ended )
+                End();
+            return;
           }
         }
+      }
+
+      if ( ended ) {
+        destroy(this);
+        return;
       }
 
       { // refresh screen
@@ -297,6 +345,9 @@ public:
           fps_display.Set_String( to!string(cast(int)(20000/_FPS)) ~ " FPS");
         }
 
+        // check console key
+        AODCore.console.ConsEng.Refresh();
+
         Render(); // render the screen
       }
 
@@ -305,21 +356,22 @@ public:
         temp_dt = cast(float)(SDL_GetTicks()) - curr_dt;
         while ( temp_dt < ms_dt ) {
           SDL_PumpEvents();
+          SDL_Delay(1);
           temp_dt = cast(float)(SDL_GetTicks()) - curr_dt;
         }
       }
-
       // set current frame timemark
       prev_dt = curr_dt;
     }
   }
-
-
+/** */
   void Update() {
     // update objects
     foreach ( l ; objects )
-    foreach ( a ; l )
+    foreach ( a ; l ) {
       a.Update();
+      a.Post_Update();
+    }
 
     // remove objects
     foreach ( rem_it; 0 .. objs_to_rem.length ) {
@@ -335,6 +387,28 @@ public:
       }
     }
     objs_to_rem = [];
+
+    // destroy everything this frame?
+    if ( cleanup_this_frame ) {
+      cleanup_this_frame = false;
+      for ( int i = 0; i != objects.length; ++ i ) {
+        for ( int j = 0; j != objects[i].length; ++ j ) {
+          if ( objects[i][j] != fps_display ) {
+            destroy(objects[i][j]);
+            objects[i][j] = null;
+          }
+        }
+      }
+      objects = [];
+      if ( fps_display ) {
+        Add(fps_display);
+      }
+      if ( add_after_cleanup !is null ) {
+        Add(add_after_cleanup);
+      }
+      import AODCore.sound;
+      Sound.Clean_Up();
+    }
   }
 
   ~this() {
@@ -343,10 +417,11 @@ public:
     SDL_Quit();
   }
 
+/** */
   void Render() {
     glClear(GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT);
     glClearColor(bg_red,bg_green,bg_blue,0);
-    
+
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     glEnable(GL_TEXTURE_2D);
@@ -356,81 +431,31 @@ public:
 
     static GLubyte[6] index = [ 0,1,2, 1,2,3 ];
 
-    // --- objects
-
-    foreach ( az ; objects )
-    foreach ( lz ; az ) {
-      if ( !lz.R_Is_Visible() ) continue;
-      auto position = lz.R_Position(),
-           size      = lz.R_Size();
-      if ( !lz.R_Is_Static_Pos() ) {
-        position.x -= off_x;
-        position.y -= off_y;
+    // --- rendereables ---
+    for ( size_t layer = objects.length-1; layer != -1; -- layer ) {
+      foreach ( obj ; objects[layer] ) {
+        switch ( obj.R_Render_Base_Type ) {
+          case Render_Base.Render_Base_Type.Entity:
+            auto e = cast(Entity)obj;
+            e.Render();
+          break;
+          case Render_Base.Render_Base_Type.Text:
+            auto t = cast(Text)obj;
+            t.Render();
+          break;
+          default:
+            obj.Render();
+          break;
+        }
       }
-      if ((position.x + size.x/2 < 0 ||
-           position.x - size.x/2 > Camera.R_Size().x ) ||
-          (position.y + size.y/2 < 0 ||
-           position.y - size.y/2 > Camera.R_Size().y) )
-        continue;
-
-      glPushMatrix();
-      glPushAttrib(GL_CURRENT_BIT);
-        if ( lz.R_Is_Coloured() )
-          glColor4f(lz.R_Red(), lz.R_Green(), lz.R_Blue(), lz.R_Alpha());
-        glBindTexture(GL_TEXTURE_2D, lz.R_Sprite_Texture());
-        auto origin = lz.R_Origin();
-        int fx = lz.R_Flipped_X() ? - 1 :  1 ,
-            fy = lz.R_Flipped_Y() ?   1 :- 1 ;
-        glTranslatef(position.x + origin.x*fx,
-                     position.y + origin.y*fy, 0);
-        import std.conv : to;
-        import std.stdio : writeln;
-        glRotatef((lz.R_Rotation()*180.0)/3.14159f, 0, 0, 1);
-        glTranslatef(-origin.x*fx,
-                     -origin.y*fy, 0);
-        glScalef (lz.R_Img_Size().x, lz.R_Img_Size().y, 1);
-
-        import std.conv : to;
-        glVertexPointer  (2, GL_FLOAT, 0, Entity.Vertices.ptr);
-        glTexCoordPointer(2, GL_FLOAT, 0, lz.R_UV_Array().ptr);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, index.ptr);
-        glLoadIdentity();
-      glPopAttrib();
-      glPopMatrix();
     }
-
-
-    // ---- texts
-    foreach ( i; 0 .. text.length ) {
-      auto tz = text[i];
-      if ( !tz.R_Visible() ) continue;
-      if ( !tz.R_FT_Font() ) {
-        Debug_Output("Font face uninitialized for " ~ tz.R_Font());
-      }
-    
-      string t_str = tz.R_Str();
-      import std.stdio : writeln;
-      /* writeln("Rendering " ~ t_str ~ " @ " ~ cast(string)tz.R_Position()); */
-
-      glPushMatrix();
-        glTranslatef(tz.R_Position().x, tz.R_Position().y, 0);
-        glListBase(tz.R_FT_Font().R_Character_List());
-        glCallLists(t_str.length, GL_UNSIGNED_BYTE, t_str.ptr);
-      glPopMatrix();
-    }
-
 
     // ---- console
     static import AODCore.console;
     if ( AODCore.console.console_open ) {
       foreach ( tz; AODCore.console.ConsEng.console_text ) {
-        string t_str = tz.R_Str();
-
-        glPushMatrix();
-          glTranslatef(tz.R_Position().x, tz.R_Position().y, 0);
-          glListBase(tz.R_FT_Font().R_Character_List());
-          glCallLists(t_str.length, GL_UNSIGNED_BYTE, t_str.ptr);
-        glPopMatrix();
+        import std.stdio;
+        tz.Render();
       }
     }
 
