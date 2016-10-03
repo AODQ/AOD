@@ -141,19 +141,23 @@ alias Menu = AODCore.menu.Menu;
 /** */
 alias Vector = AODCore.vector.Vector;
 /** */
+alias Node   = AODCore.vector.Node;
+/** */
 alias Matrix = AODCore.matrix.Matrix;
 
 /** Bindings to the AODCore.Utility module */
+/** */
+alias R_Rand = AODCore.utility.R_Rand;
+/** */
+alias Max  = AODCore.utility.Max;
+/** */
+alias Min  = AODCore.utility.Min;
+/** */
+alias To_Rad = AODCore.utility.To_Rad;
+/** */
+alias To_Deg = AODCore.utility.To_Deg;
 class Util {
 public: static:
-  /** */
-  alias R_Rand = AODCore.utility.R_Rand;
-  alias R_Max  = AODCore.utility.R_Max;
-  alias R_Min  = AODCore.utility.R_Min;
-  /** */
-  alias To_Rad = AODCore.utility.To_Rad;
-  /** */
-  alias To_Deg = AODCore.utility.To_Deg;
 
   alias E         = AODCore.utility.E;
   alias Log10E    = AODCore.utility.Log10E;
@@ -165,6 +169,9 @@ public: static:
   alias Epsilon   = AODCore.utility.Epsilon;
 
   alias Remove    = AODCore.utility.Remove;
+
+  /** */
+  alias Bresenham_Line = AODCore.utility.Bresenham_Line;
 
   /** */
   alias Load_INI  = AODCore.utility.Load_INI;
@@ -305,8 +312,9 @@ alias Load_Sound = AODCore.sound.Sound.Load_Sound;
 alias Play_Sound = AODCore.sound.Sound.Play_Sound;
 alias Stop_Sound = AODCore.sound.Sound.Stop_Sound;
 class Sound {
-  alias Change_Sample_Position = AODCore.sound.Sound.Change_Sound_Position;
-  alias Clean_Up               = AODCore.sound.Sound.Clean_Up;
+  alias Change_Sound_Position = AODCore.sound.Sound.Change_Sound_Position;
+  alias Clean_Up              = AODCore.sound.Sound.Clean_Up;
+  alias Change_Sound_Volume   = AODCore.sound.Sound.Change_Sound_Volume;
 }
 
 

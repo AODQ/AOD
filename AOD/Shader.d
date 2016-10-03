@@ -70,14 +70,16 @@ public:
     glDeleteShader(compute_ID   ) ;
   }
 
+  /** Binds program shader to OpenGL */
   void Bind() {
     glUseProgram ( id );
   }
+  /** Unbinds program shader from OpenGL */
   static void Unbind() {
     glUseProgram ( 0 );
   }
   /** Returns the program/shader ID */
-  GLuint R_Shader_ID() {
+  GLuint ID() {
     return id;
   }
 }

@@ -50,7 +50,7 @@ public:
   */
   Vector R_Position(bool apply_static = false) {
     static import AODCore.camera;
-    if ( apply_static || static_position ) {
+    if ( apply_static && !static_position ) {
       return Vector(position.x - AODCore.camera.R_Position.x,
                     position.y - AODCore.camera.R_Position.y);
     }
@@ -82,6 +82,8 @@ public:
   */
   abstract void Post_Update();
   void Set_ID(uint _id) { id = _id; }
+  void Remove() { removed = true; }
+  bool R_Removed() { return removed; }
 protected:
   /** The render type so Realm knows how to render this object (for custom
       render types I plan on having some function call in the future) */
@@ -95,6 +97,7 @@ protected:
   /** unique ID to this rendereable */
   uint id;
 private:
+  bool removed = false;
   /** The layer (z-index) of which the object is located. Used only to determine
       which objects get rendered first */
   ubyte layer;

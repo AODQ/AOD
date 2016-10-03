@@ -42,14 +42,12 @@ import AODCore.render_base;
 */
 class Entity : Render_Base {
 public:
-
   static immutable(float[8]) Vertices = [
     -0.5f, -0.5f,
     -0.5f,  0.5f,
      0.5f, -0.5f,
      0.5f,  0.5f
   ];
-
   /**
 Params:
     _layer = Layer that the entity should be rendered (0 is top)
@@ -325,7 +323,14 @@ Params:
   // ---- utility ----
   /** Called immediately before rendering this entity, used to change GLSL
       uniform values. Meant to be overriden */
-  void Prerender() {}
+  void Prerender() {
+    // set colour and texture
+    import derelict.opengl3.gl;
+    import derelict.opengl3.gl3;
+    if ( R_Coloured )
+      glColor4f(R_Red, R_Green, R_Blue, R_Alpha);
+    glBindTexture(GL_TEXTURE_2D, R_Sprite_Texture);
+  }
   override void Update() {};
   /** Applies velocity/torque to entity (No need to call this) */
   override void Post_Update() {
@@ -341,21 +346,14 @@ Params:
   }
   override void Render() {
     if ( !R_Visible ) return;
-    auto pos = R_Position,
+    auto pos = R_Position(true),
          siz = size;
-    import Camera = AODCore.camera;
-    if ((pos.x + size.x/2 < 0 || pos.x - size.x/2 > Camera.R_Size().x ) ||
-        (pos.y + size.y/2 < 0 || pos.y - size.y/2 > Camera.R_Size().y) )
-      return;
 
     import derelict.opengl3.gl;
     import derelict.opengl3.gl3;
     glPushMatrix();
     glPushAttrib(GL_CURRENT_BIT);
-      // set colour and texture
-      if ( R_Coloured )
-        glColor4f(R_Red, R_Green, R_Blue, R_Alpha);
-      glBindTexture(GL_TEXTURE_2D, R_Sprite_Texture);
+      Prerender();
       // position/rotation/scale
       int fx = R_Flipped_X ? -1 : 1,
           fy = R_Flipped_Y ?  1 :-1;
@@ -365,21 +363,15 @@ Params:
       glTranslatef(-cast(int)(rotate_origin.x*fx),
                    -cast(int)(rotate_origin.y*fy), 0);
       glScalef(R_Img_Size.x, R_Img_Size.y, 1);
-      // shader
-      static import AODCore.shader;
-      if ( R_Shader.R_Shader_ID != 0 ) {
-        R_Shader.Bind();
-        Prerender();
-      } else
-        AODCore.shader.Shader.Unbind();
       // render
       static GLubyte[6] index = [ 0,1,2, 1,2,3 ];
       glVertexPointer  (2, GL_FLOAT, 0, Entity.Vertices.ptr);
       glTexCoordPointer(2, GL_FLOAT, 0, R_UV_Array.ptr);
       glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, index.ptr);
-      glLoadIdentity();
+      /* glLoadIdentity(); */
     glPopAttrib();
     glPopMatrix();
+    AODCore.shader.Shader.Unbind();
   }
 private:
   void Refresh_Transform() {

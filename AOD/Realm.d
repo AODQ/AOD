@@ -117,11 +117,9 @@ public:
     mixin(Load_Library!("DerelictILUT"      ,""));
     mixin(Load_Library!("DerelictAL"        ,""));
     version (linux) {
-      mixin(Load_Library!("DerelictFT"        , ""));
       mixin(Load_Library!("DerelictVorbis"    , ""));
       mixin(Load_Library!("DerelictVorbisFile", ""));
     } else {
-      mixin(Load_Library!("DerelictFT"        ,"\"freetype265.dll\""));
       mixin(Load_Library!("DerelictVorbis"    ,"\"libvorbis-0.dll\""));
       mixin(Load_Library!("DerelictVorbisFile","\"libvorbisfile-3.dll\""));
     }
@@ -139,7 +137,7 @@ public:
                                            SDL_WINDOW_SHOWN );
     writeln("AOD@Realm.d@Creating OpenGL Context");
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,  24);
     SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE,   8);
@@ -208,8 +206,6 @@ public:
       writeln("AOD@Realm.d@Initializing sounds core");
       writeln("Initializing Sounds Core");
       SoundEng.Set_Up();
-      writeln("Initializing Font Core");
-      TextEng.Font.Init();
       /* objs_to_rem = []; */
       /* bg_red   = 0; */
       /* bg_blue  = 0; */
@@ -245,7 +241,10 @@ public:
   void Remove(Render_Base o) in {
     assert(o !is null);
   } body {
-    objs_to_rem ~= o;
+    if ( !o.R_Removed ) {
+      o.Remove();
+      objs_to_rem ~= o;
+    }
   }
 /**  */
   void Clean_Up(Render_Base rendereable) {
@@ -256,7 +255,7 @@ public:
   void Set_BG_Colours(GLfloat r, GLfloat g, GLfloat b) {
     bg_red = r;
     bg_green = g;
-    bg_blue = g;
+    bg_blue = b;
   }
 
 /** */
@@ -324,12 +323,21 @@ public:
             return;
           }
         }
+
+        if ( AODCore.input.keystate [ SDL_SCANCODE_ESCAPE ] )
+          End();
       }
 
+      // -- DEBUG START
+      import std.stdio : writeln;
+      import std.conv : to;
+      /* writeln("end update, game manager update"); */
+      // -- DEBUG END
       if ( ended ) {
         destroy(this);
         return;
       }
+
 
       { // refresh screen
         float _FPS = 0;
@@ -340,17 +348,34 @@ public:
         fps[0] = elapsed_dt;
         _FPS += fps[0];
 
-        if ( fps_display !is null ) {
-          import std.conv : to;
-          fps_display.Set_String( to!string(cast(int)(20000/_FPS)) ~ " FPS");
-        }
+        /* /// ----- debug ---- */
+        /* import std.stdio : writeln; */
+        /* import std.conv : to; */
+        /* writeln(to!string(cast(int)(20000/_FPS))); */
+        /* /// ----- debug ---- */
+
+
+        /* if ( fps_display !is null ) { */
+        /*   import std.conv : to; */
+        /*   fps_display.Set_String( to!string(cast(int)(20000/_FPS)) ~ " FPS"); */
+        /* } */
 
         // check console key
-        AODCore.console.ConsEng.Refresh();
+        /* AODCore.console.ConsEng.Refresh(); */
 
+        // -- DEBUG START
+        import std.stdio : writeln;
+        import std.conv : to;
+        /* writeln("render"); */
+        // -- DEBUG END
         Render(); // render the screen
       }
 
+      // -- DEBUG START
+      import std.stdio : writeln;
+      import std.conv : to;
+      /* writeln("sleep"); */
+      // -- DEBUG END
       { // sleep until temp dt reaches ms_dt
         float temp_dt = accumulated_dt;
         temp_dt = cast(float)(SDL_GetTicks()) - curr_dt;
@@ -366,15 +391,14 @@ public:
   }
 /** */
   void Update() {
-    // update objects
     foreach ( l ; objects )
     foreach ( a ; l ) {
       a.Update();
       a.Post_Update();
     }
-
     // remove objects
     foreach ( rem_it; 0 .. objs_to_rem.length ) {
+      if ( objs_to_rem[rem_it] is null ) continue;
       int layer_it = objs_to_rem[rem_it].R_Layer();
       foreach ( obj_it; 0 .. objects[layer_it].length ) {
         if ( objects[layer_it][obj_it] is objs_to_rem[rem_it] ) {
@@ -388,6 +412,11 @@ public:
     }
     objs_to_rem = [];
 
+    // -- DEBUG START
+    import std.stdio : writeln;
+    import std.conv : to;
+    /* writeln("destroy all"); */
+    // -- DEBUG END
     // destroy everything this frame?
     if ( cleanup_this_frame ) {
       cleanup_this_frame = false;
@@ -408,6 +437,7 @@ public:
       }
       import AODCore.sound;
       Sound.Clean_Up();
+      objs_to_rem = []; // in case destructors added new objs
     }
   }
 
@@ -426,9 +456,6 @@ public:
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     glEnable(GL_TEXTURE_2D);
 
-    float off_x = Camera.R_Origin_Offset().x,
-          off_y = Camera.R_Origin_Offset().y;
-
     static GLubyte[6] index = [ 0,1,2, 1,2,3 ];
 
     // --- rendereables ---
@@ -436,12 +463,10 @@ public:
       foreach ( obj ; objects[layer] ) {
         switch ( obj.R_Render_Base_Type ) {
           case Render_Base.Render_Base_Type.Entity:
-            auto e = cast(Entity)obj;
-            e.Render();
+            (cast(Entity)obj).Render();
           break;
           case Render_Base.Render_Base_Type.Text:
-            auto t = cast(Text)obj;
-            t.Render();
+            (cast(Text)obj).Render();
           break;
           default:
             obj.Render();
@@ -453,7 +478,7 @@ public:
     // ---- console
     static import AODCore.console;
     if ( AODCore.console.console_open ) {
-      foreach ( tz; AODCore.console.ConsEng.console_text ) {
+     foreach ( tz; AODCore.console.ConsEng.console_text ) {
         import std.stdio;
         tz.Render();
       }
@@ -462,7 +487,6 @@ public:
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
     glDisableClientState(GL_TEXTURE_2D);
-
 
     SDL_GL_SwapWindow(screen);
   }

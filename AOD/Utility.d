@@ -26,14 +26,17 @@ import std.random;
 private Mt19937 gen;
 
 void Seed_Random() {
-  import std.algorithm.iteration : map;
-  import std.range : repeat;
-  gen.seed(map!((a) => unpredictableSeed)(repeat(0)));
+  uint seed = unpredictableSeed;
+  import std.stdio;
+  import std.conv : to;
+  writeln("SEED: " ~ to!string(seed));
+  gen.seed(seed);
 }
 
 /** Returns: A random float bot .. top*/
 float R_Rand(float bot, float top) {
-  return uniform(bot, top, gen);
+  if ( bot == top ) return top;
+  return bot < top ? uniform(bot, top, gen) : uniform(top, bot, gen);
 }
 
 /** */
@@ -44,18 +47,24 @@ enum Direction {
 };
 
 /** Returns: Max value between the two parameters */
-T R_Max(T)(T x, T y) { return x > y ? x : y; }
+T Max(T)(T x, T y) { return x > y ? x : y; }
 /** Returns: Min value between the two parameters */
-T R_Min(T)(T x, T y) { return x < y ? x : y; }
+T Min(T)(T x, T y) { return x < y ? x : y; }
 
 /** Returns array with indexed element removed */
-T Remove(T)(T array, int index) in {
+T Remove(T)(T array, int index) {
+  return Remove!T(array, cast(size_t)index);
+}
+
+T Remove(T)(T array, size_t index) in {
   assert(index >= 0 && index < array.length);
 } body {
   if ( array.length-1 == index ) return array[0 .. index];
+  else if ( index == 0 )
+    return array[0 .. index];
   else {
     return array[0 .. index] ~
-           array[index .. $];
+           array[index+1 .. $];
   }
 }
 
@@ -69,6 +78,39 @@ float To_Rad(float x) {
 /** Converts from radians to degrees*/
 float To_Deg(float x) {
   return x * (180.0/Pi);
+}
+
+/**
+  Calculates Bresenham's Line Algorithm
+  From: http://www.roguebasin.com/index.php?title=Bresenham%27s_Line_Algorithm
+*/
+import AODCore.vector;
+Vector[] Bresenham_Line(int sx, int sy, int ex, int ey) {
+  import std.math;
+  int dx = abs(ex - sx),
+      dy = abs(ey - sy),
+      ix = sx < ex ? 1 : -1,
+      iy = sy < ey ? 1 : -1;
+  int err = dx - dy;
+
+  Vector[] points;
+  while ( true ) {
+    points ~= Vector(sx, sy);
+
+    if ( sx == ex && sy == ey )
+      break;
+
+    int e = err * 2;
+    if ( e > -dx ) {
+      err -= dy;
+      sx += ix;
+    }
+    if ( e < dx ){
+      err += dx;
+      sy += iy;
+    }
+  }
+  return points;
 }
 
 /**

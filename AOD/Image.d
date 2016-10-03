@@ -80,6 +80,9 @@ public:
     lr.y = 1 - ul.y;
     ul.y = 1 - ty;
   }
+  this(SheetContainer sc, int ulx, int uly, int lrx, int lry) {
+    this(sc, Vector(ulx, uly), Vector(lrx, lry));
+  }
 }
 
 

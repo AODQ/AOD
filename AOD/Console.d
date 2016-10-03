@@ -19,11 +19,14 @@ params:
   console_type = Sets the console_type (see Type)
   key          = Sets key for which console will open to
 */
+static import std.file;
+
 void Initialize(Type console_type, SDL_Keycode key = SDL_SCANCODE_GRAVE) {
   ConsEng.console_type = console_type;
   Debug_Output("Created new console");
   ConsEng.key = key;
   ConsEng.Construct();
+  std.file.write("DEBUG.txt", "");
 }
 
 /** Outputs a message to the console
@@ -33,13 +36,13 @@ Params:
 void Output(string msg) {
   writeln(msg);
   Out(msg);
+  std.file.append("DEBUG.txt", msg ~ '\n');
 }
 
 /** Should be used only by the AOD engine but if you want to have messages that
     only appear in a debug enviornment then this would be a good choice.
 */
 void Debug_Output(string ot) {
-  writeln("AOD SAYS: " ~ ot);
   if ( ConsEng.console_type == Type.Debug_In )
     Out(ot);
 }
