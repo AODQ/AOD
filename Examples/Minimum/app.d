@@ -1,7 +1,7 @@
 import derelict.opengl3.gl3;
 import derelict.sdl2.sdl;
 import std.stdio;
-static import AOD;
+static import AOD = AODCore.aod;
 
 class Test_Object : AOD.Entity {
 public:

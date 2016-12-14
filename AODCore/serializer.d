@@ -4,7 +4,6 @@ import std.typetuple;
 import std.typecons;
 import std.meta;
 import std.string : format;
-import entity.tile;
 import AOD = AODCore.aod;
 import std.stdio : writeln;
 

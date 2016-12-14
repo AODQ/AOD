@@ -174,7 +174,6 @@ import std.typetuple;
 import std.typecons;
 import std.meta;
 import std.string : format;
-import entity.tile;
 
 template AliasSeqToStringArray(ASeq...) {
   static if ( ASeq.length == 0 )

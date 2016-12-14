@@ -296,12 +296,6 @@ public:
         return;
       }
 
-      {
-        import gamemanager;
-        gamemanager.Post_Update();
-      }
-
-
       { // refresh screen
         fps = elapsed_dt ~ fps[0 .. $-1];
         Render();
@@ -331,21 +325,10 @@ public:
 /** */
   void Update() {
     // update objects
-    static import gamemanager;
-    writeln(gamemanager.entities);
-    foreach ( ent; gamemanager.entities ) {
-      writeln("update start: ", ent);
-      import std.datetime;
-      StopWatch sw;
-      sw.start();
-      ent.Update();
-      sw.stop();
-      static int flipper = 0;
-      if ( ++ flipper == 5 ) {
-        ent.dbg_ns_update = sw.peek().usecs;
-        flipper = 0;
+    foreach ( ent_l; objects ) {
+      foreach( ent; ent_l ) {
+        ent.Update();
       }
-      writeln("update end: ", ent);
     }
     // find duplicates of removals
     writeln("finding remove duplicates");
