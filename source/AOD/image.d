@@ -4,14 +4,14 @@
   a SheetContainer or SheetRect, to various functions. Another way to look at
   these two image containers is as a spritesheet and individual sprite.
 */
-module AODCore.image;
+module AOD.image;
 
 import derelict.opengl3.gl3;
 import derelict.sdl2.sdl;
 import derelict.devil.il;
 import derelict.devil.ilu;
 //import derelict.devil.ilut;
-import AODCore.aod;
+import AOD.aod;
 /**
   Contains basic information of an image.
 */

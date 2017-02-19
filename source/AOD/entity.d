@@ -24,12 +24,12 @@ Example:
 ---
 */
 
-module AODCore.entity;
+module AOD.entity;
 
 import derelict.opengl3.gl3;
 import derelict.sdl2.sdl;
 
-import AODCore.aod;
+import AOD.aod;
 /**
   A basic entity class. If you want collision support you should perhaps use
   AABBEntity or PolyEntity
@@ -372,7 +372,7 @@ Params:
     if ( !R_Visible ) return;
     auto pos = R_Position(true);
     import gl3n.linalg;
-    import AODCore.shader;
+    import AOD.shader;
 
     int fx = R_Flipped_X ? -1 : 1,
         fy = R_Flipped_Y ?  1 :-1;

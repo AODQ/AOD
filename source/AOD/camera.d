@@ -10,8 +10,8 @@ Example:
 ---
 */
 
-module AODCore.camera;
-import AODCore.aod;
+module AOD.camera;
+import AOD.aod;
 
 private Vector position;
 private Vector size;

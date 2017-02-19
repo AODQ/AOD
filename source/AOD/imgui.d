@@ -3,12 +3,12 @@
 /** I thought of integrating this more into the AOD engine, as a lot of this
       could be rewritten with what already exists, but might not happen until
       there is scripting support. */
-module AODCore.imgui;
+module AOD.imgui;
 import derelict.opengl3.gl;
 import derelict.opengl3.gl3;
 import derelict.sdl2.sdl;
 import derelict.imgui.imgui;
-import AODCore.realm : R_SDL_Window;
+import AOD.realm : R_SDL_Window;
 
 private GLuint font_texture = 0;
 private bool[3] mouse = [ false, false, false ];

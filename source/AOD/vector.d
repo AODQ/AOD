@@ -1,5 +1,5 @@
-module AODCore.vector;
-import AODCore.aod;
+module AOD.vector;
+import AOD.aod;
 
 /**
   A two-dimensional vector capable of interacting with Matrix and

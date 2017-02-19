@@ -10,12 +10,12 @@ Example:
   AOD.Play_Sound(s);
 ---
 */
-module AODCore.sound;
+module AOD.sound;
 import derelict.openal.al;
 import derelict.vorbis.vorbis;
 import derelict.vorbis.file;
 
-import AODCore.aod;
+import AOD.aod;
 import std.string;
 import std.conv : to;
 

@@ -7,9 +7,9 @@ Example:
   AOD.Add(new Text("Hello, World!", AOD.R_Window_Width()/2, 40));
 ---
 */
-module AODCore.text;
+module AOD.text;
 
-// import AODCore.aod;
+// import AOD.aod;
 // import derelict.freetype.ft;
 // import derelict.opengl3.gl;
 // import derelict.opengl3.gl3;

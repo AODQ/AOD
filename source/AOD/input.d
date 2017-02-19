@@ -1,10 +1,10 @@
 /**
   Describes the input of the current state of the Engine
 */
-module AODCore.input;
+module AOD.input;
 import derelict.sdl2.sdl;
-import AODCore.aod;
-static import AOD = AODCore.aod;
+import AOD.aod;
+static import AOD = AOD.aod;
 
 // These represent SDL_ScanCodes. These are prefereable
 // to just calling R_Mouse_Left() or w/e b/c these are bindeable

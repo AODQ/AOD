@@ -5,8 +5,8 @@
   can do is completely up to the application writer. In the future audio and
   display settings will be stored here.
 */
-module AODCore.clientvars;
-import AODCore.aod;
+module AOD.clientvars;
+import AOD.aod;
 import std.string;
 
 /** A binded key */

@@ -26,22 +26,22 @@ void Init () {
 }
 ---
 */
-module AODCore.aod;
+module AOD;
 
 import derelict.opengl3.gl3;
 import derelict.sdl2.sdl;
 import std.stdio;
 import std.string;
 
-public import AODCore.entity, AODCore.matrix, AODCore.realm, AODCore.image,
-              AODCore.animation, AODCore.render_base,
-              AODCore.sound, AODCore.text, AODCore.vector, AODCore.input;
-public import AODCore.shader : Shader;
-public import UI     = AODCore.imgui;
-public import Util   = AODCore.util;
-public import CV     = AODCore.clientvars;
-public import Camera = AODCore.camera;
-public import Serializer = AODCore.serializer;
+public import AOD.entity, AOD.matrix, AOD.realm, AOD.image,
+              AOD.animation, AOD.render_base,
+              AOD.sound, AOD.text, AOD.vector, AOD.input;
+public import AOD.shader : Shader;
+public import UI     = AOD.imgui;
+public import Util   = AOD.util;
+public import CV     = AOD.clientvars;
+public import Camera = AOD.camera;
+public import Serializer = AOD.serializer;
 
 void GL_Error() {
   GLenum error = glGetError();

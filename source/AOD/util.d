@@ -2,8 +2,8 @@
   Just general utility that is useful in AOD. Was much more useful in C++, now
   in D most of these are not necessary
 */
-module AODCore.util;
-import AODCore.aod;
+module AOD.util;
+import AOD.aod;
 import std.string;
 
 /** */
@@ -141,7 +141,10 @@ Returns:
   A hashmap representing categories, each of which is an array of INI_Item.
 */
 INI_Data Load_INI(string filename) in {
-  assert(std.file.exists(filename));
+  if ( !std.file.exists(filename) ) {
+    writeln("Create a ", filename, " file!");
+    assert(false);
+  }
 }  body {
   INI_Data data;
   string current_section = "";

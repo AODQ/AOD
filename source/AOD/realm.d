@@ -1,7 +1,7 @@
 /** Check AOD.d instead, this module is reserved for engine use only */
-module AODCore.realm;
+module AOD.realm;
 
-import AODCore.aod;
+import AOD.aod;
 import derelict.devil.il;
 import derelict.devil.ilu;
 import derelict.devil.ilut;
@@ -172,8 +172,8 @@ public:
     { // others
       SoundEng.Set_Up();
       UI.Init();
-      static import AODCore.shader;
-      AODCore.shader.Create_Default();
+      static import AOD.shader;
+      AOD.shader.Create_Default();
       /* objs_to_rem = []; */
       /* bg_red   = 0; */
       /* bg_blue  = 0; */
@@ -331,7 +331,6 @@ public:
       }
     }
     // find duplicates of removals
-    writeln("finding remove duplicates");
     if ( objs_to_rem.length > 1 ) {
       for ( int it = 0; it < objs_to_rem.length-1; ++ it ) {
         for ( int ot = it+1; ot < objs_to_rem.length; ++ ot ) {
@@ -389,14 +388,14 @@ public:
     glClear(GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT);
     glClearColor(bg_red,bg_green,bg_blue,0);
     // TODO: seperate this with func pointers or something? idk
-    static import map;
-    map.Render();
+    // static import map;
+    // map.Render();
     // --- rendereables ---
-    // for ( size_t layer = objects.length-1; layer != -1; -- layer ) {
-    //   foreach ( obj ; objects[layer] ) {
-    //     obj.Render();
-    //   }
-    // }
+    for ( size_t layer = objects.length-1; layer != -1; -- layer ) {
+      foreach ( obj ; objects[layer] ) {
+        obj.Render();
+      }
+    }
     import derelict.imgui.imgui;
     igRender(); // render imgui
 

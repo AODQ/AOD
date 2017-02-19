@@ -1,4 +1,4 @@
-module AODCore.shader;
+module AOD.shader;
 import std.string;
 import derelict.opengl3.gl3;
 

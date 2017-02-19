@@ -1,10 +1,10 @@
-module AODCore.serializer;
+module AOD.serializer;
 import std.traits;
 import std.typetuple;
 import std.typecons;
 import std.meta;
 import std.string : format;
-import AOD = AODCore.aod;
+import AOD = AOD.aod;
 import std.stdio : writeln;
 
 /**
@@ -44,7 +44,7 @@ mixin template SerializeClassDerived(alias T) {
 mixin template SerializeClassBase(alias T) {
   void Serialize(ref std.json.JSONValue value) {
     import std.conv : to;
-    static import AODCore.serializer;
+    static import AOD.serializer;
     mixin(AOD.Serializer.SerializeMembersMixin!T);
   }
   void Deserialize(std.json.JSONValue value) {
@@ -182,7 +182,7 @@ unittest {
 template AllFunctionParameters(alias T) {
   private template FunctionType(string name) {
     mixin(`alias field = %s.%s;`.format(fullyQualifiedName!T, name));
-    alias FunctionType = AODCore.util.AliasSeqToStringArray!(Parameters!field);
+    alias FunctionType = AOD.util.AliasSeqToStringArray!(Parameters!field);
   }
   alias AllFunctionParameters = staticMap!(FunctionType, AllDebugFuncs!T);
 }
