@@ -6,7 +6,7 @@
   display settings will be stored here.
 */
 module AOD.clientvars;
-import AOD.aod;
+import AOD;
 import std.string;
 
 /** A binded key */

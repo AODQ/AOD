@@ -1,7 +1,7 @@
 /** Check AOD.d instead, this module is reserved for engine use only */
 module AOD.realm;
 
-import AOD.aod;
+import AOD;
 import derelict.devil.il;
 import derelict.devil.ilu;
 import derelict.devil.ilut;

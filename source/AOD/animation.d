@@ -1,7 +1,7 @@
 module AOD.animation;
-import AOD.aod;
+import AOD;
 import JSON = std.json;
-import AOD.aod;
+import AOD;
 
 /**
   An animation that stores an array of sheetrects

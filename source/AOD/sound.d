@@ -15,7 +15,7 @@ import derelict.openal.al;
 import derelict.vorbis.vorbis;
 import derelict.vorbis.file;
 
-import AOD.aod;
+import AOD;
 import std.string;
 import std.conv : to;
 

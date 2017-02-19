@@ -35,13 +35,13 @@ import std.string;
 
 public import AOD.entity, AOD.matrix, AOD.realm, AOD.image,
               AOD.animation, AOD.render_base,
-              AOD.sound, AOD.text, AOD.vector, AOD.input;
+              AOD.sound, AOD.text, AOD.vector, AOD.input,
+              AOD.serializer;
 public import AOD.shader : Shader;
 public import UI     = AOD.imgui;
 public import Util   = AOD.util;
 public import CV     = AOD.clientvars;
 public import Camera = AOD.camera;
-public import Serializer = AOD.serializer;
 
 void GL_Error() {
   GLenum error = glGetError();

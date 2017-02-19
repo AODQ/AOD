@@ -29,7 +29,7 @@ module AOD.entity;
 import derelict.opengl3.gl3;
 import derelict.sdl2.sdl;
 
-import AOD.aod;
+import AOD;
 /**
   A basic entity class. If you want collision support you should perhaps use
   AABBEntity or PolyEntity

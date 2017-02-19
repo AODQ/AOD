@@ -2,14 +2,14 @@
   Used to render fonts to the screen
 Example:
 ---
-  import AOD.aod;
+  import AOD;
   Text.Set_Default_Font("DejaVuSansMono.ttf", 13);
   AOD.Add(new Text("Hello, World!", AOD.R_Window_Width()/2, 40));
 ---
 */
 module AOD.text;
 
-// import AOD.aod;
+// import AOD;
 // import derelict.freetype.ft;
 // import derelict.opengl3.gl;
 // import derelict.opengl3.gl3;

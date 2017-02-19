@@ -1,6 +1,6 @@
 module AOD.render_base;
 
-import AOD.aod;
+import AOD;
 
 /**
   The base of rendering, I suppose if you wanted to create your own entity,

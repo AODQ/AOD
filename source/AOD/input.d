@@ -3,8 +3,8 @@
 */
 module AOD.input;
 import derelict.sdl2.sdl;
-import AOD.aod;
-static import AOD = AOD.aod;
+import AOD;
+static import AOD;
 
 // These represent SDL_ScanCodes. These are prefereable
 // to just calling R_Mouse_Left() or w/e b/c these are bindeable

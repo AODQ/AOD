@@ -3,7 +3,7 @@
   in D most of these are not necessary
 */
 module AOD.util;
-import AOD.aod;
+import AOD;
 import std.string;
 
 /** */

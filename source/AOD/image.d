@@ -11,7 +11,7 @@ import derelict.sdl2.sdl;
 import derelict.devil.il;
 import derelict.devil.ilu;
 //import derelict.devil.ilut;
-import AOD.aod;
+import AOD;
 /**
   Contains basic information of an image.
 */

@@ -11,7 +11,7 @@ Example:
 */
 
 module AOD.camera;
-import AOD.aod;
+import AOD;
 
 private Vector position;
 private Vector size;

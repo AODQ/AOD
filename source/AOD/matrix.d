@@ -1,5 +1,5 @@
 module AOD.matrix;
-import AOD.aod;
+import AOD;
 
 /**
   A simple 2x2 matrix capable of 2D translation, rotation and scaling
