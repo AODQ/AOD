@@ -1,12 +1,13 @@
 module AOD.render_base;
 
 import AOD;
+@safe:
 
 /**
   The base of rendering, I suppose if you wanted to create your own entity,
   text, etc for some reason you could use this.
 */
-class Render_Base {
+class RenderBase {
 public:
   this(ubyte _layer = 5) {
     layer = _layer;

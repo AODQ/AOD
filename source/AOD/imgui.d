@@ -9,6 +9,7 @@ import derelict.opengl3.gl3;
 import derelict.sdl2.sdl;
 import derelict.imgui.imgui;
 import AOD.realm : R_SDL_Window;
+@safe:
 
 private GLuint font_texture = 0;
 private bool[3] mouse = [ false, false, false ];
@@ -20,7 +21,7 @@ private int shader_handle, vert_handle, frag_handle,
             attrib_location_colour;
 private uint vbo_handle, vao_handle, elements_handle;
 
-void Init() {
+void Init() @trusted {
   ImGuiIO* io = igGetIO();
   io.KeyMap[ImGuiKey_Tab        ] = SDL_SCANCODE_TAB       - 1;
   io.KeyMap[ImGuiKey_LeftArrow  ] = SDL_SCANCODE_LEFT      - 1;
@@ -47,19 +48,19 @@ void Init() {
   io.GetClipboardTextFn = &RClipboard_Text;
 }
 
-extern(C) void SClipboard_Text(const(char)* text) nothrow {
+extern(C) void SClipboard_Text(const(char)* text) @trusted nothrow {
   SDL_SetClipboardText(text);
 }
 
-extern(C) const(char)* RClipboard_Text() nothrow {
+extern(C) const(char)* RClipboard_Text() @trusted nothrow {
   return SDL_GetClipboardText();
 }
 
-void End() {
+void End() @trusted {
   igShutdown();
 }
 
-void Process_Event(SDL_Event* event) {
+void Process_Event(SDL_Event* event) @trusted {
   ImGuiIO* io = igGetIO();
   switch ( event.type ) {
     default: break;
@@ -86,7 +87,7 @@ void Process_Event(SDL_Event* event) {
   }
 }
 
-void New_Frame() {
+void New_Frame() @trusted {
   if ( !font_texture )
     Create_Device_Objects();
   ImGuiIO* io = igGetIO();
@@ -132,7 +133,7 @@ void New_Frame() {
 
 
 
-private void Create_Device_Objects() {
+private void Create_Device_Objects() @trusted {
   // Backup GL state
   GLint last_texture, last_array_buffer, last_vertex_array;
   glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
@@ -211,7 +212,7 @@ private void Create_Device_Objects() {
   glBindVertexArray (last_vertex_array);
 }
 
-void Create_Fonts_Texture() {
+void Create_Fonts_Texture() @trusted {
   ImGuiIO* io = igGetIO();
   ubyte* pixels;
   int width, height;
@@ -234,7 +235,7 @@ void Create_Fonts_Texture() {
   glBindTexture(GL_TEXTURE_2D, last_texture);
 }
 
-private void Invalidate_Device_Objects() {
+private void Invalidate_Device_Objects() @trusted {
   if ( vao_handle      ) glDeleteVertexArrays(1, &vao_handle      );
   if ( vbo_handle      ) glDeleteBuffers     (1, &vbo_handle      );
   if ( elements_handle ) glDeleteBuffers     (1, &elements_handle );
@@ -267,7 +268,7 @@ void dwriteln(T...)(T a) nothrow {
 
 
 /** main rendering function */
-extern(C) void Render_Draw_Lists(ImDrawData* data) nothrow {
+extern(C) void Render_Draw_Lists(ImDrawData* data) nothrow @trusted {
   // Avoid rendering when minimized, scale coordinates for retina displays
   // (screen coordinates != framebuffer coordinates)
   ImGuiIO* io = igGetIO();

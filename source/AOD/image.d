@@ -5,6 +5,7 @@
   these two image containers is as a spritesheet and individual sprite.
 */
 module AOD.image;
+@safe:
 
 import derelict.opengl3.gl3;
 import derelict.sdl2.sdl;
@@ -87,7 +88,7 @@ public:
 
 
 import std.string;
-SheetContainer Load_Image(const char* fil) {
+SheetContainer Load_Image(const char* fil) @trusted {
   ILuint IL_ID;
   GLuint GL_ID;
   int width, height;

@@ -1,9 +1,9 @@
 {
-	"name": "aod",
-	"description": "A 2D game engine",
-	"copyright": "Copyright © 2017, aod",
-	"authors": ["aod"],
-	"dependencies": {
+  "name": "aod",
+  "description": "A 2D game engine",
+  "copyright": "Copyright © 2017, aod",
+  "authors": ["aod"],
+  "dependencies": {
     "derelict-gl3":    "~>1.0.18",
     "derelict-sdl2":   "~>2.0.0",
     "derelict-ft":     "~>1.1.2",
@@ -12,5 +12,5 @@
     "derelict-vorbis": "~>1.0.1",
     "derelict-imgui":  "~>0.9.3",
     "gl3n":            "~>1.3.1"
-	}
+  }
 }

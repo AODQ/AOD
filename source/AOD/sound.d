@@ -18,6 +18,7 @@ import derelict.vorbis.file;
 import AOD;
 import std.string;
 import std.conv : to;
+@trusted:
 
 /*
    Sounds contains an array that allows the programmer to index

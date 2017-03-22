@@ -27,6 +27,7 @@ void Init () {
 ---
 */
 module AOD;
+@safe:
 
 import derelict.opengl3.gl3;
 import derelict.sdl2.sdl;
@@ -36,14 +37,13 @@ import std.string;
 public import AOD.entity, AOD.matrix, AOD.realm, AOD.image,
               AOD.animation, AOD.render_base,
               AOD.sound, AOD.text, AOD.vector, AOD.input,
-              AOD.serializer;
+              AOD.serializer, AOD.camera;
 public import AOD.shader : Shader;
 public import UI     = AOD.imgui;
 public import Util   = AOD.util;
 public import CV     = AOD.clientvars;
-public import Camera = AOD.camera;
 
-void GL_Error() {
+void GL_Error() @trusted {
   GLenum error = glGetError();
   switch ( error ) {
     default: writeln("UNKNOWN ERROR"); assert(false);
@@ -103,7 +103,7 @@ void End()   in { assert(realm !is null); } body {
 }
 
 /** Adds rbase to the engine to be updated and rendered */
-Render_Base Add (T...)(T n)
+RenderBase Add (T...)(T n)
 in {
   assert(realm !is null);
   assert(n.length > 0 );
@@ -124,7 +124,7 @@ Params:
   rendereable = Adds a rendereable after cleanup is done (cleanup doesn't take
                  place until after the frame is finished)
 */
-void Clean_Up(Render_Base rendereable = null) in {
+void Clean_Up(RenderBase rendereable = null) in {
   assert(realm !is null);
 } body { realm.Clean_Up(rendereable); }
 /** Sets the background colour when rendering

@@ -1,6 +1,6 @@
 module AOD.matrix;
 import AOD;
-
+@safe:
 /**
   A simple 2x2 matrix capable of 2D translation, rotation and scaling
 */

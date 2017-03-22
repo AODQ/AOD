@@ -1,5 +1,6 @@
 /** Check AOD.d instead, this module is reserved for engine use only */
 module AOD.realm;
+@safe:
 
 import AOD;
 import derelict.devil.il;
@@ -20,11 +21,11 @@ SDL_Window* R_SDL_Window() { return screen; }
 /** */
 class Realm {
 /** objects in realm, index [layer][it]*/
-  Render_Base[][] objects;
+  RenderBase[][] objects;
 /** objects to remove at end of each frame */
-  Render_Base[] objs_to_rem;
+  RenderBase[] objs_to_rem;
   bool cleanup_this_frame;
-  Render_Base add_after_cleanup;
+  RenderBase add_after_cleanup;
 
 /** colour to clear buffer with */
   GLfloat bg_red, bg_blue, bg_green;
@@ -61,7 +62,7 @@ public:
 
 /** */
   this(int window_width, int window_height, uint ms_dt_,
-       immutable(char)* window_name, immutable(char)* icon = "") {
+       immutable(char)* window_name, immutable(char)* icon = "") @trusted {
     Util.Seed_Random();
     width  = window_width;
     height = window_height;
@@ -180,13 +181,13 @@ public:
       /* bg_green = 0; */
       InputEngine.Refresh_Input();
     }
-    Camera.Set_Position(Vector(0, 0));
-    Camera.Set_Size(Vector(cast(float)window_width,
+    Set_Camera_Position(Vector(0, 0));
+    Set_Camera_Size(Vector(cast(float)window_width,
                            cast(float)window_height));
   }
 
 /** */
-  Render_Base Add(Render_Base o) in {
+  RenderBase Add(RenderBase o) in {
     assert(o !is null);
   } body {
     int l = o.R_Layer();
@@ -200,17 +201,15 @@ public:
     Clean_Up(null);
     End_Sound();
     ended = true;
-    import std.c.stdlib;
-    exit(0);
   }
 /** */
-  void Remove(Render_Base o) in {
+  void Remove(RenderBase o) in {
     assert(o !is null);
   } body {
     objs_to_rem ~= o;
   }
 /**  */
-  void Clean_Up(Render_Base rendereable) {
+  void Clean_Up(RenderBase rendereable) {
     cleanup_this_frame = true;
     add_after_cleanup  = rendereable;
   }
@@ -222,7 +221,7 @@ public:
   }
 
 /** */
-  void Run() {
+  void Run() @trusted {
     float prev_dt        = 0, // DT from previous frame
           curr_dt        = 0, // DT for beginning of current frame
           elapsed_dt     = 0, // DT elapsed between previous and this frame
@@ -263,7 +262,8 @@ public:
         // sdl
         SDL_PumpEvents();
         InputEngine.Refresh_Input();
-        if ( keystate[ SDL_SCANCODE_ESCAPE ] )
+        if ( keystate[ SDL_SCANCODE_CAPSLOCK ] &&
+             keystate[ SDL_SCANCODE_LEFTBRACKET ])
           End();
 
         // actual update
@@ -323,7 +323,7 @@ public:
     return 1000/fps_count;
   }
 /** */
-  void Update() {
+  void Update() @trusted {
     // update objects
     foreach ( ent_l; objects ) {
       foreach( ent; ent_l ) {
@@ -377,14 +377,14 @@ public:
     }
   }
 
-  ~this() {
+  ~this() @trusted {
     // todo...
     SDL_DestroyWindow(screen);
     SDL_Quit();
   }
 
 /** */
-  void Render() {
+  void Render() @trusted {
     glClear(GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT);
     glClearColor(bg_red,bg_green,bg_blue,0);
     // TODO: seperate this with func pointers or something? idk

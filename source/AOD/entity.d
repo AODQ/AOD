@@ -25,6 +25,7 @@ Example:
 */
 
 module AOD.entity;
+@safe:
 
 import derelict.opengl3.gl3;
 import derelict.sdl2.sdl;
@@ -34,7 +35,7 @@ import AOD;
   A basic entity class. If you want collision support you should perhaps use
   AABBEntity or PolyEntity
 */
-class Entity : Render_Base {
+class Entity : RenderBase {
 public:
   /**
 Params:
@@ -89,8 +90,7 @@ Params:
       reset_size = If the size of this entity (and image) should be resized
                       to index' size
   */
-  void Set_Sprite(GLuint index, bool reset_size = 0)
-  in {
+  void Set_Sprite(GLuint index, bool reset_size = 0) @trusted in {
     assert(index > 0);
   } body {
     if ( reset_size ) {
@@ -326,8 +326,8 @@ Params:
   */
   override Vector R_Position(bool apply_static = false) {
     if ( apply_static && !static_position ) {
-      return Vector(position.x - Camera.R_Position.x,
-                    position.y - Camera.R_Position.y);
+      return Vector(position.x - R_Camera_Position.x,
+                    position.y - R_Camera_Position.y);
     }
     return position;
   }
@@ -368,7 +368,7 @@ Params:
   Collision_Info Collision(Entity o) {
     return Collision_Info();
   }
-  override void Render() {
+  override void Render() @trusted {
     if ( !R_Visible ) return;
     auto pos = R_Position(true);
     import gl3n.linalg;

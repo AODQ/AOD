@@ -1,6 +1,7 @@
 module AOD.vector;
 import AOD;
 
+@safe:
 /**
   A two-dimensional vector capable of interacting with Matrix and
   performing simple linear algebra functions

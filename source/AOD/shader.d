@@ -1,6 +1,7 @@
 module AOD.shader;
 import std.string;
 import derelict.opengl3.gl3;
+@safe:
 
 /**
   Allows you to implement GLSL shaders into the rendering of AoD
@@ -17,7 +18,7 @@ public:
          string fragment_file  = "",
          string tess_ctrl_file = "",
          string tess_eval_file = "",
-         string compute_file   = "" ) {
+         string compute_file   = "" ) @trusted  {
     bool is_frag = fragment_file   != "",
          is_tesc = tess_ctrl_file != "",
          is_tese = tess_eval_file != "",
@@ -70,14 +71,14 @@ public:
     glDeleteShader(compute_ID   ) ;
   }
 
-  void Bind() {
+  void Bind() @trusted {
     glUseProgram ( id );
   }
-  static void Unbind() {
+  static void Unbind() @trusted {
     glUseProgram ( 0 );
   }
   /** Returns the program/shader ID */
-  GLuint R_Shader_ID() {
+  GLuint R_ID() {
     return id;
   }
 }
@@ -124,7 +125,7 @@ GLuint[] elements = [
   2, 3, 0
 ];
 
-void Check_Shader_Error ( int handle, string type ) {
+private void Check_Shader_Error ( int handle, string type ) @trusted {
   GLint compile_status;
   glGetShaderiv(handle, GL_COMPILE_STATUS, &compile_status);
   if ( compile_status == GL_FALSE ) {
@@ -139,7 +140,7 @@ void Check_Shader_Error ( int handle, string type ) {
   }
 }
 
-private void Create_Default_Shaders() {
+private void Create_Default_Shaders() @trusted {
   def_shader      = glCreateProgram();
   def_vert_handle = glCreateShader(GL_VERTEX_SHADER);
   def_frag_handle = glCreateShader(GL_FRAGMENT_SHADER);
@@ -172,7 +173,7 @@ private void Create_Default_Shaders() {
 
 }
 
-void Create_Default ( ) {
+void Create_Default ( ) @trusted {
   Create_Default_Shaders();
 
   glGenVertexArrays(1, &VAO);

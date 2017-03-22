@@ -2,6 +2,7 @@ module AOD.animation;
 import AOD;
 import JSON = std.json;
 import AOD;
+@safe:
 
 /**
   An animation that stores an array of sheetrects
@@ -46,7 +47,8 @@ public:
       width  = sprite width
       height = sprite height
   **/
-  this ( JSON.JSONValue data, SheetContainer sc, int width, int height ) {
+  this ( JSON.JSONValue data, SheetContainer sc, int width, int height )
+       @trusted {
     import std.string : strip;
     string sframes = data["frames"].str.strip;
     int sx, sy, ex = -1, ey = -1;

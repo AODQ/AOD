@@ -166,7 +166,7 @@ module AOD.text;
 //   <br>
 //   Unlike Entity, this should probably never be inherited from
 // */
-// class Text : Render_Base {
+// class Text : RenderBase {
 //   Vector position;
 //   string msg, font_name;
 //   int pt_size;
@@ -217,7 +217,7 @@ module AOD.text;
 //       _layer = layer
 //   */
 //   this(Vector pos, string str_, ubyte _layer = 4) {
-//     super(_layer, Render_Base.Render_Base_Type.Text);
+//     super(_layer, RenderBase.RenderBase_Type.Text);
 //     position = pos;
 //     static_position = true;
 //     Redefault(str_);

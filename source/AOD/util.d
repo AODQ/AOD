@@ -6,6 +6,8 @@ module AOD.util;
 import AOD;
 import std.string;
 
+@safe:
+
 /** */
 const(float) E         =  2.718282f,
 /** */
@@ -140,12 +142,12 @@ Params:
 Returns:
   A hashmap representing categories, each of which is an array of INI_Item.
 */
-INI_Data Load_INI(string filename) in {
+INI_Data Load_INI(string filename) @trusted in {
   if ( !std.file.exists(filename) ) {
     writeln("Create a ", filename, " file!");
     assert(false);
   }
-}  body {
+} body {
   INI_Data data;
   string current_section = "";
   File fil = File(filename, "rb");
