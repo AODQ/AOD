@@ -140,29 +140,29 @@ private void Create_Device_Objects() @trusted {
   glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &last_array_buffer);
   glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &last_vertex_array);
 
-  const GLchar* vertex_shader =
-      "#version 330\n"
-      "uniform mat4 ProjMtx;\n"
-      "in vec2 Position;\n"
-      "in vec2 UV;\n"
-      "in vec4 Color;\n"
-      "out vec2 Frag_UV;\n"
-      "out vec4 Frag_Color;\n"
-      "void main() {\n"
-      "	Frag_UV = UV;\n"
-      "	Frag_Color = Color;\n"
-      "	gl_Position = ProjMtx * vec4(Position.xy,0,1);\n"
-      "}\n";
+  const GLchar* vertex_shader =`
+      #version 330
+      uniform mat4 ProjMtx;
+      in vec2 Position;
+      in vec2 UV;
+      in vec4 Color;
+      out vec2 Frag_UV;
+      out vec4 Frag_Color;
+      void main() {
+      	Frag_UV = UV;
+      	Frag_Color = Color;
+      	gl_Position = ProjMtx * vec4(Position.xy,0,1);
+      };`;
 
-  const GLchar* fragment_shader =
-      "#version 330\n"
-      "uniform sampler2D Texture;\n"
-      "in vec2 Frag_UV;\n"
-      "in vec4 Frag_Color;\n"
-      "out vec4 Out_Color;\n"
-      "void main() {\n"
-      "	Out_Color = Frag_Color * texture( Texture, Frag_UV.st);\n"
-      "}\n";
+  const GLchar* fragment_shader =`
+      #version 330
+      uniform sampler2D Texture;
+      in vec2 Frag_UV;
+      in vec4 Frag_Color;
+      out vec4 Out_Color;
+      void main() {
+      	Out_Color = Frag_Color * texture( Texture, Frag_UV.st);
+      };`;
 
   shader_handle = glCreateProgram();
   vert_handle   = glCreateShader(GL_VERTEX_SHADER);
