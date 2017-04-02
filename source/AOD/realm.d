@@ -391,7 +391,9 @@ public:
     // static import map;
     // map.Render();
     // --- rendereables ---
-    for ( size_t layer = objects.length-1; layer != -1; -- layer ) {
+    import std.algorithm : min;
+    auto olength = min(objects.length-1, objects.length);
+    for ( size_t layer = objects.length-1; layer != 0; -- layer ) {
       foreach ( obj ; objects[layer] ) {
         obj.Render();
       }

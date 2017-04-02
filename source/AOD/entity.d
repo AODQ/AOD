@@ -4,7 +4,7 @@
 Example:
 ---
   // To create your own entity class
-  class Player {
+  class Player : Entity {
   public:
     this() {
       super(); // Make sure to call this
